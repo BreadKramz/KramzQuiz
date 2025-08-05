@@ -248,6 +248,7 @@ window.addCustomQuestion = async function () {
 window.toggleViewPanel = async function () {
   document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
   document.getElementById("view-panel").classList.add("show");
+
   const container = document.getElementById("questions-list-container");
   container.innerHTML = "<p>Loading...</p>";
 
@@ -257,13 +258,18 @@ window.toggleViewPanel = async function () {
       container.innerHTML = "<p>No saved questions.</p>";
       return;
     }
+
     container.innerHTML = "";
     qSnap.forEach(docSnap => {
       const q = docSnap.data();
       const div = document.createElement("div");
-      div.innerHTML = `<strong>${q.question}</strong><br>Choices: ${q.options.join(", ")}<br>
+      div.innerHTML = `
+        <strong>${q.question}</strong><br>
+        Choices: ${q.options.join(", ")}<br>
         Answer: ${q.options[q.answer]}<br>
-        <button class="debug-btn" onclick="deleteQuestion('${docSnap.id}')">🗑 Delete</button>`;
+        <button class="debug-btn" onclick="deleteQuestion('${docSnap.id}')">🗑 Delete</button>
+        <hr style="margin:10px 0;">
+      `;
       container.appendChild(div);
     });
   } catch (err) {
@@ -271,6 +277,7 @@ window.toggleViewPanel = async function () {
     container.innerHTML = "<p>❌ Error loading questions.</p>";
   }
 };
+
 
 window.deleteQuestion = function (id) {
   questionToDeleteId = id;
@@ -293,6 +300,77 @@ window.confirmDelete = async function () {
 window.cancelDelete = function () {
   questionToDeleteId = null;
   document.getElementById("confirm-delete-box").style.display = "none";
+};
+
+window.toggleGlobalQuestionPanel = async function () {
+  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
+  document.getElementById("global-question-panel").classList.add("show");
+  await loadGlobalQuestions();
+};
+
+window.addGlobalQuestion = async function () {
+  const question = document.getElementById("global-question-text").value.trim();
+  const choices = Array.from(document.querySelectorAll(".global-choice-input")).map(c => c.value.trim());
+  const correct = parseInt(document.getElementById("global-correct-answer").value) - 1;
+  const msg = document.getElementById("global-add-feedback");
+
+  if (!question || choices.some(c => !c) || isNaN(correct) || correct < 0 || correct >= choices.length) {
+    msg.innerText = "⚠ Please fill all fields.";
+    msg.style.color = "red";
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "global_questions"), {
+      question,
+      options: choices,
+      answer: correct
+    });
+    msg.innerText = "✅ Global question added!";
+    msg.style.color = "green";
+    document.getElementById("global-question-text").value = "";
+    document.getElementById("global-correct-answer").value = "";
+    document.querySelectorAll(".global-choice-input").forEach(c => c.value = "");
+  } catch (err) {
+    console.error(err);
+    msg.innerText = "❌ Error adding global question.";
+    msg.style.color = "red";
+  }
+};
+
+async function loadGlobalQuestions() {
+  const container = document.getElementById("global-questions-list");
+  container.innerHTML = "<p>Loading...</p>";
+
+  try {
+    const qSnap = await getDocs(collection(db, "global_questions"));
+    if (qSnap.empty) {
+      container.innerHTML = "<p>No global questions yet.</p>";
+      return;
+    }
+    container.innerHTML = "";
+    qSnap.forEach(docSnap => {
+      const q = docSnap.data();
+      const div = document.createElement("div");
+      div.innerHTML = `<strong>${q.question}</strong><br>
+        Choices: ${q.options.join(", ")}<br>
+        Answer: ${q.options[q.answer]}<br>
+        <button class="debug-btn" onclick="deleteGlobalQuestion('${docSnap.id}')">🗑 Delete</button><hr style="margin:10px 0;">`;
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "<p>❌ Error loading global questions.</p>";
+  }
+}
+
+window.deleteGlobalQuestion = async function (id) {
+  try {
+    await deleteDoc(doc(db, "global_questions", id));
+    await viewGlobalQuestions(); // Refresh after delete
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 // ===== SETTINGS =====
@@ -324,10 +402,25 @@ window.startQuiz = async function () {
   try {
     // ✅ Get only current user's questions
     const qSnap = await getDocs(query(collection(db, "questions"), where("user", "==", currentUser)));
+    const globalSnap = await getDocs(collection(db, "global_questions"));
 
     let allQuestions = [];
 
+    // User questions
     qSnap.forEach(docSnap => {
+      const q = docSnap.data();
+      if (
+        q.question &&
+        Array.isArray(q.options) &&
+        typeof q.answer === "number" &&
+        q.options[q.answer] !== undefined
+      ) {
+        allQuestions.push(q);
+      }
+    });
+
+    // Global questions
+    globalSnap.forEach(docSnap => {
       const q = docSnap.data();
       if (
         q.question &&
@@ -360,6 +453,61 @@ window.startQuiz = async function () {
   }
 };
 
+window.viewGlobalQuestions = async function () {
+  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
+  document.getElementById("global-view-panel").classList.add("show");
+
+  const container = document.getElementById("global-view-list");
+  container.innerHTML = "<p>Loading...</p>";
+
+  try {
+    const qSnap = await getDocs(collection(db, "global_questions"));
+    if (qSnap.empty) {
+      container.innerHTML = "<p>No global questions available.</p>";
+      return;
+    }
+
+    container.innerHTML = "";
+    qSnap.forEach(docSnap => {
+      const q = docSnap.data();
+      const div = document.createElement("div");
+      div.innerHTML = `<strong>${q.question}</strong><br>
+        Choices: ${q.options.join(", ")}<br>
+        Answer: ${q.options[q.answer]}<br>
+        <button class="debug-btn" onclick="prepareGlobalDelete('${docSnap.id}')">🗑 Delete</button>
+        <hr style="margin:10px 0;">`;
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "<p>❌ Error loading global questions.</p>";
+  }
+};
+
+let globalQuestionToDeleteId = null;
+
+window.prepareGlobalDelete = function (id) {
+  globalQuestionToDeleteId = id;
+  document.getElementById("confirmDeleteOverlay").style.display = "block";
+};
+
+window.confirmGlobalDelete = async function () {
+  if (!globalQuestionToDeleteId) return;
+
+  try {
+    await deleteDoc(doc(db, "global_questions", globalQuestionToDeleteId));
+    globalQuestionToDeleteId = null;
+    document.getElementById("confirmDeleteOverlay").style.display = "none";
+    await viewGlobalQuestions(); // Refresh list
+  } catch (err) {
+    console.error("Failed to delete global question:", err);
+  }
+};
+
+window.cancelGlobalDelete = function () {
+  globalQuestionToDeleteId = null;
+  document.getElementById("confirmDeleteOverlay").style.display = "none";
+};
 
 function loadQuestion() {
   const original = quizQuestions[currentQuestionIndex];
@@ -476,3 +624,23 @@ window.returnToStart = function () {
 document.getElementById('theme-toggle').addEventListener('change', function () {
   document.body.classList.toggle('dark', this.checked);
 });
+
+window.logoutUser = function () {
+  currentUser = null;
+
+  // Stop music if playing
+  if (!document.getElementById("music-toggle").checked) {
+    document.getElementById("background-music").pause();
+    document.getElementById("background-music").currentTime = 0;
+  }
+
+  // Hide all panels and return to login screen
+  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
+  document.getElementById("login-screen").classList.add("show");
+
+  // Optional: Clear feedback, inputs, and reset state
+  document.getElementById("login-username").value = "";
+  document.getElementById("login-password").value = "";
+  document.getElementById("login-message").textContent = "";
+  document.getElementById("quiz-error-message").textContent = "";
+};
