@@ -1,4 +1,3 @@
-// ===== Firebase Setup =====
 import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -28,7 +27,6 @@ let timeLeft = 10;
 let quizQuestions = [];
 let questionToDeleteId = null;
 
-// ===== USER REGISTER =====
 window.userRegister = async function () {
   const username = document.getElementById("login-username").value.trim();
   const password = document.getElementById("login-password").value.trim();
@@ -58,7 +56,6 @@ window.userRegister = async function () {
   }
 };
 
-// ===== USER LOGIN =====
 window.userLogin = async function () {
   const username = document.getElementById("login-username").value.trim();
   const password = document.getElementById("login-password").value.trim();
@@ -82,10 +79,9 @@ window.userLogin = async function () {
       document.getElementById("login-screen").classList.remove("show");
       document.getElementById("start-screen").classList.add("show");
 
-      // 🔊 Play background music
       const music = document.getElementById("background-music");
       if (music) {
-        music.volume = 1; // Optional: adjust volume
+        music.volume = 1; 
         music.play().catch(err => console.log("Music play error:", err));
       }
     }
@@ -96,8 +92,6 @@ window.userLogin = async function () {
   }
 };
 
-
-// ===== ADMIN LOGIN =====
 window.adminLogin = function () {
   const username = document.getElementById("admin-username").value.trim();
   const password = document.getElementById("admin-password").value.trim();
@@ -117,7 +111,6 @@ window.showAdminLogin = function () {
   document.getElementById("admin-login").classList.add("show");
 };
 
-// ===== BACK BUTTONS =====
 window.backToLogin = function () {
   document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
   document.getElementById("login-screen").classList.add("show");
@@ -139,7 +132,6 @@ window.returnToStart = function () {
   document.getElementById("feedback").innerText = ""; // ✅ Clear feedback
 };
 
-// ===== FEEDBACK =====
 window.openFeedbackPanel = function () {
   document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
   document.getElementById("feedback-panel").classList.add("show");
@@ -207,7 +199,6 @@ window.viewFeedbacks = async function () {
   }
 };
 
-// ===== ADD QUESTION =====
 window.toggleAddQuestion = function () {
   document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
   document.getElementById("add-question-screen").classList.add("show");
@@ -244,7 +235,6 @@ window.addCustomQuestion = async function () {
   }
 };
 
-// ===== VIEW QUESTIONS =====
 window.toggleViewPanel = async function () {
   document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
   document.getElementById("view-panel").classList.add("show");
@@ -278,7 +268,6 @@ window.toggleViewPanel = async function () {
   }
 };
 
-
 window.deleteQuestion = function (id) {
   questionToDeleteId = id;
   document.getElementById("confirm-delete-box").style.display = "block";
@@ -291,7 +280,7 @@ window.confirmDelete = async function () {
     await deleteDoc(doc(db, "questions", questionToDeleteId));
     document.getElementById("confirm-delete-box").style.display = "none";
     questionToDeleteId = null;
-    toggleViewPanel(); // refresh the list
+    toggleViewPanel(); 
   } catch (err) {
     console.error(err);
   }
@@ -367,23 +356,20 @@ async function loadGlobalQuestions() {
 window.deleteGlobalQuestion = async function (id) {
   try {
     await deleteDoc(doc(db, "global_questions", id));
-    await viewGlobalQuestions(); // Refresh after delete
+    await viewGlobalQuestions();
   } catch (err) {
     console.error(err);
   }
 };
 
-// ===== SETTINGS =====
 window.toggleSettings = function () {
   document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
   document.getElementById("settings-screen").classList.add("show");
 
-  // Set checkbox based on music state
   const music = document.getElementById("background-music");
   document.getElementById("music-toggle").checked = !music.paused;
 };
 
-// Music checkbox change listener
 document.getElementById("music-toggle").addEventListener("change", function () {
   const music = document.getElementById("background-music");
   if (this.checked) {
@@ -393,20 +379,16 @@ document.getElementById("music-toggle").addEventListener("change", function () {
   }
 });
 
-
-// ===== QUIZ GAMEPLAY FIXED =====
 window.startQuiz = async function () {
   const errorMsg = document.getElementById("quiz-error-message");
   errorMsg.innerText = "";
 
   try {
-    // ✅ Get only current user's questions
     const qSnap = await getDocs(query(collection(db, "questions"), where("user", "==", currentUser)));
     const globalSnap = await getDocs(collection(db, "global_questions"));
 
     let allQuestions = [];
 
-    // User questions
     qSnap.forEach(docSnap => {
       const q = docSnap.data();
       if (
@@ -419,7 +401,6 @@ window.startQuiz = async function () {
       }
     });
 
-    // Global questions
     globalSnap.forEach(docSnap => {
       const q = docSnap.data();
       if (
@@ -498,7 +479,7 @@ window.confirmGlobalDelete = async function () {
     await deleteDoc(doc(db, "global_questions", globalQuestionToDeleteId));
     globalQuestionToDeleteId = null;
     document.getElementById("confirmDeleteOverlay").style.display = "none";
-    await viewGlobalQuestions(); // Refresh list
+    await viewGlobalQuestions(); 
   } catch (err) {
     console.error("Failed to delete global question:", err);
   }
@@ -517,23 +498,20 @@ function loadQuestion() {
     return;
   }
 
-  // ✅ Update counter
   document.getElementById("question-counter").innerText = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
   document.getElementById("question").innerText = original.question;
-  document.getElementById("feedback").innerText = ""; // 🔄 Clear previous feedback
-  document.getElementById("next-btn").style.display = "none"; // Hide next button
+  document.getElementById("feedback").innerText = ""; 
+  document.getElementById("next-btn").style.display = "none"; 
 
   const optionsContainer = document.getElementById("options-container");
   optionsContainer.innerHTML = "";
 
-  // ✅ Clone and shuffle options
   const options = [...original.options];
   const correctAnswerText = original.options[original.answer];
   const shuffled = options
     .map(opt => ({ text: opt, isCorrect: opt === correctAnswerText }))
     .sort(() => Math.random() - 0.5);
 
-  // ✅ Save new shuffled correct index for current question
   quizQuestions[currentQuestionIndex].shuffled = shuffled;
 
   shuffled.forEach((opt, i) => {
@@ -554,7 +532,7 @@ function loadQuestion() {
 function startTimer() {
   timeLeft = 10;
   document.getElementById("timer").innerText = `⌛Time: ${timeLeft}`;
-  document.getElementById("next-btn").style.display = "none"; // Hide Next button initially
+  document.getElementById("next-btn").style.display = "none"; 
 
   clearInterval(timerInterval);
   timerInterval = setInterval(() => {
@@ -565,7 +543,7 @@ function startTimer() {
       const correctIndex = quizQuestions[currentQuestionIndex].answer;
       disableOptions(correctIndex);
       document.getElementById("feedback").innerText = `⏰ Time's up! Correct: ${quizQuestions[currentQuestionIndex].options[correctIndex]}`;
-      document.getElementById("next-btn").style.display = "inline-block"; // Show Next button
+      document.getElementById("next-btn").style.display = "inline-block";
     }
   }, 1000);
 }
@@ -592,9 +570,9 @@ function disableOptions() {
   options.forEach((btn, i) => {
     btn.disabled = true;
     if (q.shuffled[i].isCorrect) {
-      btn.style.background = "#a5d6a7"; // Green for correct
+      btn.style.background = "#a5d6a7";
     } else {
-      btn.style.background = "#ef9a9a"; // Red for wrong
+      btn.style.background = "#ef9a9a"; 
     }
   });
 }
@@ -628,17 +606,14 @@ document.getElementById('theme-toggle').addEventListener('change', function () {
 window.logoutUser = function () {
   currentUser = null;
 
-  // Stop music if playing
   if (!document.getElementById("music-toggle").checked) {
     document.getElementById("background-music").pause();
     document.getElementById("background-music").currentTime = 0;
   }
 
-  // Hide all panels and return to login screen
   document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
   document.getElementById("login-screen").classList.add("show");
 
-  // Optional: Clear feedback, inputs, and reset state
   document.getElementById("login-username").value = "";
   document.getElementById("login-password").value = "";
   document.getElementById("login-message").textContent = "";

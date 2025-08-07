@@ -9,12 +9,10 @@
 
 <audio id="background-music" loop>
   <source src="Jeopardy Theme.mp3" type="audio/mpeg">
-  Your browser does not support the audio element.
 </audio>
 
 <div class="container fade-panel">
 
-  <!-- User Login/Register -->
   <div class="login-screen show" id="login-screen">
     <h2>🔐 Welcome to Kramz Quiz</h2>
     <input type="text" id="login-username" placeholder="Enter username">
@@ -25,7 +23,6 @@
     <button class="admin-btn" onclick="showAdminLogin()">Admin Login</button>
   </div>
 
-  <!-- Admin Login -->
   <div class="admin-login" id="admin-login">
     <h2>👨‍💼 Admin Login</h2>
     <input type="text" id="admin-username" placeholder="Admin username">
@@ -35,7 +32,6 @@
     <button class="start-btn" onclick="backToLogin()">Back</button>
   </div>
 
-  <!-- Start Screen -->
   <div class="start-screen" id="start-screen">
     <h2>🎉 Welcome to the Kramz Quiz!</h2>
     <p style="text-align: center; margin: 10px 0;">Almost finish, Few Bug Fixes Nalang</p>
@@ -48,7 +44,6 @@
     <p id="quiz-error-message" style="color: red; text-align: center; margin-top: 10px;"></p>
   </div>
 
-  <!-- Feedback Panel -->
   <div class="quiz-container" id="feedback-panel">
     <h2>💬 Feedback / Suggestions</h2>
     <textarea id="feedback-text" placeholder="Write your suggestions here..." style="width:100%; height:100px; padding:8px; border-radius:6px; border:1px solid #ccc;"></textarea>
@@ -57,7 +52,6 @@
     <p id="feedback-message" style="text-align:center; margin-top:10px;"></p>
   </div>
 
-  <!-- Add Question -->
   <div class="add-question-screen" id="add-question-screen">
     <h2>Add Your Own Question</h2>
     <input type="text" id="new-question" placeholder="Enter your question">
@@ -74,7 +68,6 @@
     <p id="add-feedback" style="text-align:center; margin-top: 10px;"></p>
   </div>
 
-  <!-- Settings -->
   <div class="settings-screen" id="settings-screen">
     <h2>⚙️ Settings</h2>
 
@@ -94,7 +87,6 @@
     <button onclick="backToStart()">⬅ Back</button>
   </div>
 
-  <!-- Quiz -->
   <div class="quiz-container" id="quiz">
     <div id="question-counter">Question 1 of 4</div>
     <div id="timer">Time: 10</div>
@@ -104,14 +96,12 @@
     <button id="next-btn" onclick="nextQuestion()">Next</button>
   </div>
 
-  <!-- Score Screen -->
   <div class="quiz-container" id="score-screen">
     <h2 style="text-align:center;" id="score-text">Your Score:</h2>
     <p style="text-align:center; margin: 15px 0; font-weight: bold;" id="score-message"></p>
     <button class="start-btn" onclick="returnToStart()">Try Again</button>
   </div>
 
-  <!-- Admin Panel -->
 <div id="admin-panel" class="admin-screen">
   <h2>Admin Panel</h2>
   <button class="view-questions-btn" onclick="viewFeedbacks()">View Feedback</button>
@@ -120,7 +110,6 @@
   <button class="start-btn" onclick="backToLogin()">Logout</button>
 </div>
 
-  <!-- Add Global Question Panel -->
   <div id="global-question-panel" class="add-question-screen">
     <h2>Add Global Question</h2>
     <input type="text" id="global-question-text" placeholder="Enter your question">
@@ -134,7 +123,6 @@
     <button onclick="backToAdminPanel()">⬅ Back</button>
   </div>
 
-  <!-- View Global Questions Panel -->
   <div id="global-view-panel" class="quiz-container">
     <h2>🌐 Global Questions</h2>
     <div id="global-view-list" style="max-height: 200px; overflow-y: auto;"></div>
@@ -147,7 +135,6 @@
     <button class="start-btn" onclick="backToAdminPanel()">Back</button>
   </div>
 
-  <!-- View Panel -->
   <div id="view-panel" class="quiz-container">
     <h2>Saved Questions</h2>
     <div id="questions-list-container" style="max-height: 200px; overflow-y: auto;"></div>
@@ -160,14 +147,12 @@
     <button onclick="cancelDelete()" class="confirm-btn no-btn">❌ Cancel</button>
   </div>
 
-<!-- Global Confirm Delete Box -->
 <div id="confirmDeleteOverlay" class="confirm-delete-box" style="display:none;">
   <p>Are you sure you want to delete this global question?</p>
   <button class="confirm-btn" onclick="confirmGlobalDelete()">✅ Yes</button>
   <button class="confirm-btn" onclick="cancelGlobalDelete()">❌ Cancel</button>
 </div>
 
-<!-- Scripts -->
 <script type="module" src="script.js"></script>
 </body>
 </html>
