@@ -621,13 +621,26 @@ window.logoutUser = function () {
 };
 
 // === AI: Image → Questions ===
-async function fileToBase64(file) {
+// === AI: Image → Questions ===
+async function fileToDataURL(file) {
   return new Promise((res, rej) => {
     const reader = new FileReader();
-    reader.onload = () => res(reader.result.split(',')[1]); // Remove data:*;base64, prefix
+    reader.onload = () => res(reader.result); // full data URL keeps the correct MIME
     reader.onerror = rej;
     reader.readAsDataURL(file);
   });
+}
+
+async function fetchWithRetry(url, options, retries = 2, delayMs = 1500) {
+  for (let i = 0; i <= retries; i++) {
+    const resp = await fetch(url, options);
+    if (resp.ok) return resp;
+    if (resp.status === 429 && i < retries) {
+      await new Promise(r => setTimeout(r, delayMs));
+      continue;
+    }
+    return resp;
+  }
 }
 
 window.generateQuestionsFromImage = async function () {
@@ -642,37 +655,48 @@ window.generateQuestionsFromImage = async function () {
     return;
   }
 
-  let b64;
-  try {
-    b64 = await fileToBase64(input.files[0]);
-  } catch (e) {
-    console.error(e);
-    status.style.color = "red";
-    status.innerText = "Failed to read image.";
-    return;
-  }
+  // prevent double-click spam
+  const btn = Array.from(document.querySelectorAll("button"))
+    .find(b => b.textContent && b.textContent.toLowerCase().includes("generate from image"));
+  if (btn) btn.disabled = true;
 
   try {
-    const resp = await fetch("https://first-project-ten-nu.vercel.app/api/generate-questions", {
+    const dataUrl = await fileToDataURL(input.files[0]);
+
+    const resp = await fetchWithRetry("/api/generate-questions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        imageDataUrl: `data:image/jpeg;base64,${b64}`,
+        imageDataUrl: dataUrl,  // includes correct mime + base64
         count: 4,
         difficulty: "easy"
       })
     });
 
-    if (!resp.ok) throw new Error("Server error");
-    const data = await resp.json();
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      console.error(`API Error (${resp.status})`, errorText);
+      status.style.color = "red";
+      if (resp.status === 404) {
+        status.innerText = "❌ API route not found (404). Ensure api/generate-questions.js exists and is deployed.";
+      } else if (resp.status === 429) {
+        status.innerText = "❌ Rate limited (429). Please wait a moment and try again.";
+      } else if (resp.status === 500) {
+        status.innerText = `❌ Server error: ${errorText}`;
+      } else {
+        status.innerText = `❌ Error ${resp.status}: ${errorText}`;
+      }
+      return;
+    }
 
+    const data = await resp.json();
     if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
       status.style.color = "red";
       status.innerText = "No questions generated.";
       return;
     }
 
-    // Save each generated question into Firestore
+    // Save to Firestore (your existing logic)
     for (const q of data.questions) {
       if (!q.question || !Array.isArray(q.options) || typeof q.correctIndex !== "number") continue;
       if (!q.options[q.correctIndex]) continue;
@@ -681,7 +705,7 @@ window.generateQuestionsFromImage = async function () {
         user: currentUser,
         question: q.question,
         options: q.options,
-        answer: q.correctIndex // Your code uses 'answer' for index
+        answer: q.correctIndex
       });
     }
 
@@ -690,6 +714,8 @@ window.generateQuestionsFromImage = async function () {
   } catch (e) {
     console.error(e);
     status.style.color = "red";
-    status.innerText = "Generation failed. Check console for details.";
+    status.innerText = `Generation failed: ${e.message}`;
+  } finally {
+    if (btn) btn.disabled = false;
   }
 };
