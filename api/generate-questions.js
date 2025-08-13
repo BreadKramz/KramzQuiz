@@ -1,6 +1,14 @@
 export const config = { runtime: "edge" };
 
 export default async function handler(req) {
+    console.log("OPENAI_API_KEY length:", process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0);
+
+if (!process.env.OPENAI_API_KEY) {
+  return new Response(JSON.stringify({ error: "Missing OPENAI_API_KEY" }), { status: 500 });
+}
+
+
+    
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "POST only" }), { status: 405 });
   }
