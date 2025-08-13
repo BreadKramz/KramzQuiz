@@ -653,7 +653,7 @@ window.generateQuestionsFromImage = async function () {
   }
 
   try {
-    const resp = await fetch("/api/generate-questions", {
+    const resp = await fetch("https://first-project-ten-nu.vercel.app/api/generate-questions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
