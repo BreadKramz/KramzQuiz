@@ -67,6 +67,13 @@
     <button class="start-btn" onclick="backToStart()">Back</button>
     <p id="add-feedback" style="text-align:center; margin-top: 10px;"></p>
   </div>
+  
+  <div style="margin-top:10px; border-top:1px solid #666; padding-top:10px;">
+    <label style="font-weight:600; display:block; margin:6px 0;">🖼 Generate questions from an image</label>
+    <input type="file" id="quiz-image" accept="image/*">
+    <button class="start-btn" onclick="generateQuestionsFromImage()">Generate from Image</button>
+    <p id="gen-status" style="text-align:center; margin-top:8px;"></p>
+  </div>
 
   <div class="settings-screen" id="settings-screen">
     <h2>⚙️ Settings</h2>

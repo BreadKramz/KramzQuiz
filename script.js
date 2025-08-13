@@ -619,3 +619,77 @@ window.logoutUser = function () {
   document.getElementById("login-message").textContent = "";
   document.getElementById("quiz-error-message").textContent = "";
 };
+
+// === AI: Image → Questions ===
+async function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => res(reader.result.split(',')[1]); // Remove data:*;base64, prefix
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  });
+}
+
+window.generateQuestionsFromImage = async function () {
+  const status = document.getElementById("gen-status");
+  status.style.color = "";
+  status.innerText = "Analyzing image…";
+
+  const input = document.getElementById("quiz-image");
+  if (!input.files || !input.files[0]) {
+    status.style.color = "red";
+    status.innerText = "Please choose an image first.";
+    return;
+  }
+
+  let b64;
+  try {
+    b64 = await fileToBase64(input.files[0]);
+  } catch (e) {
+    console.error(e);
+    status.style.color = "red";
+    status.innerText = "Failed to read image.";
+    return;
+  }
+
+  try {
+    const resp = await fetch("/api/generate-questions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageDataUrl: `data:image/jpeg;base64,${b64}`,
+        count: 4,
+        difficulty: "easy"
+      })
+    });
+
+    if (!resp.ok) throw new Error("Server error");
+    const data = await resp.json();
+
+    if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
+      status.style.color = "red";
+      status.innerText = "No questions generated.";
+      return;
+    }
+
+    // Save each generated question into Firestore
+    for (const q of data.questions) {
+      if (!q.question || !Array.isArray(q.options) || typeof q.correctIndex !== "number") continue;
+      if (!q.options[q.correctIndex]) continue;
+
+      await addDoc(collection(db, "questions"), {
+        user: currentUser,
+        question: q.question,
+        options: q.options,
+        answer: q.correctIndex // Your code uses 'answer' for index
+      });
+    }
+
+    status.style.color = "green";
+    status.innerText = `✅ Added ${data.questions.length} generated question(s)! Check "View Questionnaires" or start the quiz.`;
+  } catch (e) {
+    console.error(e);
+    status.style.color = "red";
+    status.innerText = "Generation failed. Check console for details.";
+  }
+};
