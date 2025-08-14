@@ -73,6 +73,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Theme (default: light OFF => dark ON only if saved as dark)
   const savedTheme = localStorage.getItem("theme"); // 'dark' | 'light'
   document.body.classList.toggle("dark", savedTheme === "dark");
+  
+  // Initialize password toggle functionality
+  initPasswordToggles();
 
   // Music restore
   const music = $("background-music");
@@ -827,6 +830,27 @@ function addAriaAttributes() {
   });
   document.querySelectorAll('.quiz-container, .start-screen, .settings-screen, .add-question-screen, .admin-login, .admin-screen')
     .forEach(section => section.setAttribute('role', 'region'));
+}
+
+// ======= Password Toggle Functionality =======
+function initPasswordToggles() {
+  // Add event listeners to all password toggle buttons
+  document.querySelectorAll('.password-toggle').forEach(button => {
+    button.addEventListener('click', function() {
+      const input = this.previousElementSibling;
+      const eyeIcon = this.querySelector('.eye-icon');
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        eyeIcon.textContent = '🙈'; // Closed eye icon
+        this.setAttribute('aria-label', 'Hide password');
+      } else {
+        input.type = 'password';
+        eyeIcon.textContent = '👁'; // Open eye icon
+        this.setAttribute('aria-label', 'Show password');
+      }
+    });
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {

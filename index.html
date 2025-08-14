@@ -24,8 +24,8 @@
     <!-- Login Screen -->
     <section class="container show" id="login-screen" role="region" aria-label="Login">
       <div class="card">
-        <h2 class="card-title">Welcome back User</h2>
-        <p class="muted">Login or create an account to start your quiz.</p>
+        <h2 class="card-title">Welcome User</h2>
+        <p class="muted">Login or create an Account to start your KramzQuiz Adventure!.</p>
         <div class="stack">
           <label class="input">
             <span class="input-label">Username</span>
@@ -33,7 +33,12 @@
           </label>
           <label class="input">
             <span class="input-label">Password</span>
-            <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" />
+            <div class="password-container">
+              <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" />
+              <button type="button" class="password-toggle" aria-label="Show password">
+                <span class="eye-icon">👁</span>
+              </button>
+            </div>
           </label>
           <p id="login-message" class="status-message" aria-live="polite"></p>
           <button class="btn btn-primary" onclick="userLogin()">Sign in</button>
@@ -64,7 +69,12 @@
           </label>
           <label class="input">
             <span class="input-label">Admin password</span>
-            <input id="admin-password" type="password" placeholder="1234" />
+            <div class="password-container">
+              <input id="admin-password" type="password" placeholder="1234" />
+              <button type="button" class="password-toggle" aria-label="Show password">
+                <span class="eye-icon">👁</span>
+              </button>
+            </div>
           </label>
           <p id="admin-message" class="status-message" aria-live="polite"></p>
           <button class="btn btn-primary" onclick="adminLogin()">Enter admin</button>
@@ -75,8 +85,8 @@
     <!-- Start Screen -->
     <section class="container" id="start-screen" role="region" aria-label="Start">
       <div class="card">
-        <h2 class="card-title">Let’s play!</h2>
-        <p class="muted">Build questions, practice, and track your score.</p>
+        <h2 class="card-title">🎉Let’s play!🎉</h2>
+        <p class="muted">If you encounter a bug or have suggestion, please feel free to put it in the feedback section. TY!!!</p>
 
         <div class="grid-actions">
           <button class="btn btn-primary" onclick="startQuiz()">Start Quiz</button>

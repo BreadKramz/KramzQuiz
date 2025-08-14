@@ -305,6 +305,41 @@ input[type="text"], input[type="password"], input[type="number"], textarea, inpu
   outline: none;
   transition: border-color .2s, box-shadow .2s, background .2s;
 }
+
+/* Password container */
+.password-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-container input {
+  padding-right: 40px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.password-toggle:hover {
+  background: var(--surface-strong);
+  color: var(--text);
+}
+
+.eye-icon {
+  font-size: 16px;
+}
 input::placeholder, textarea::placeholder { color: color-mix(in srgb, var(--text-muted) 85%, transparent); }
 input:focus, textarea:focus {
   border-color: var(--primary);
