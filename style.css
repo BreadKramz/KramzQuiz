@@ -1,29 +1,35 @@
 :root {
-  --bg-color: #c6c6c6;                
-  --text-color: #1f1f1f;             
-  --panel-bg: #dde0e6;              
-  --border-color: #aab0b8;            
-  --option-bg: #ccd3db;              
-  --option-hover: #c0c7d0;             
+  --bg-color: #c6c6c6;
+  --text-color: #1f1f1f;
+  --panel-bg: #dde0e6;
+  --border-color: #aab0b8;
+  --option-bg: #ccd3db;
+  --option-hover: #c0c7d0;
   --button-bg: linear-gradient(135deg, #2d7fc4, #1d5e90);
   --button-hover: linear-gradient(135deg, #428ecc, #1a5483);
   --accent-color: #287bff;
   --switch-bg: #b8c0ca;
   --switch-handle: #d8dde3;
+  --success-color: #4caf50;
+  --error-color: #f44336;
+  --warning-color: #ff9800;
 }
 
 body.dark {
-  --bg-color: #2a2a2a;              
-  --text-color: #e8e8e8;             
-  --panel-bg: #353535;               
-  --border-color: #555555;        
-  --option-bg: #3f3f3f;                
-  --option-hover: #4a4a4a;   
+  --bg-color: #2a2a2a;
+  --text-color: #e8e8e8;
+  --panel-bg: #353535;
+  --border-color: #555555;
+  --option-bg: #3f3f3f;
+  --option-hover: #4a4a4a;
   --button-bg: linear-gradient(135deg, #4a4a4a, #363636);
   --button-hover: linear-gradient(135deg, #5c5c5c, #404040);
   --accent-color: #a5c8ff;
   --switch-bg: #555;
   --switch-handle: #bbb;
+  --success-color: #8bc34a;
+  --error-color: #ef9a9a;
+  --warning-color: #ffd54f;
 }
 
 * {
@@ -33,7 +39,7 @@ body.dark {
 }
 
 body {
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   background: var(--bg-color);
   color: var(--text-color);
   display: flex;
@@ -58,48 +64,84 @@ h2 {
   text-align: center;
   margin-bottom: 24px;
   color: var(--text-color);
+  font-size: 1.5rem;
 }
 
 input, textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 14px 16px;
   margin: 8px 0;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
   background: var(--option-bg);
   color: var(--text-color);
   transition: background 0.3s, border 0.3s, color 0.3s;
+  font-size: 1rem;
 }
 
 input:focus, textarea:focus {
   border-color: var(--accent-color);
   background: var(--option-hover);
   outline: none;
+  box-shadow: 0 0 0 3px rgba(40, 123, 255, 0.2);
 }
 
 button {
   margin-top: 14px;
-  padding: 10px;
+  padding: 14px 16px;
   border: none;
   border-radius: 8px;
   background: var(--button-bg);
   color: white;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
+  transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
 
 button:hover {
   background: var(--button-hover);
-  transform: scale(1.03);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(40, 123, 255, 0.4);
+}
+
+.btn-secondary {
+  background: var(--option-bg);
+  color: var(--text-color);
+}
+
+.btn-secondary:hover {
+  background: var(--option-hover);
+}
+
+.btn-danger {
+  background: var(--error-color);
+}
+
+.btn-danger:hover {
+  background: #d32f2f;
 }
 
 .toggle-option {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 14px 0;
+  margin: 20px 0;
+  padding: 15px;
+  background: var(--option-bg);
+  border-radius: 12px;
+  cursor: pointer;
 }
 
 .toggle-option input[type="checkbox"] {
@@ -166,18 +208,19 @@ button:hover {
 
 #question-counter,
 #timer {
-  font-size: 14px;
+  font-size: 1rem;
   color: var(--accent-color);
   text-align: center;
   font-weight: 600;
 }
 
 #question {
-  font-size: 18px;
+  font-size: 1.25rem;
   font-weight: 600;
   text-align: center;
   color: var(--text-color);
-  margin: 10px 0 6px;
+  margin: 10px 0 16px;
+  line-height: 1.4;
 }
 
 .options {
@@ -189,17 +232,40 @@ button:hover {
 .options button {
   background: var(--option-bg);
   color: var(--text-color);
-  border: 1px solid var(--border-color);
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 15px;
+  border: 2px solid var(--border-color);
+  padding: 16px 20px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
+  transition: background 0.3s, transform 0.2s, border-color 0.3s;
+  text-align: left;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .options button:hover {
   background: var(--option-hover);
-  transform: scale(1.02);
+  transform: translateY(-2px);
+  border-color: var(--accent-color);
+}
+
+.options button:active {
+  transform: translateY(0);
+}
+
+.options button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(40, 123, 255, 0.4);
+}
+
+.options button.correct {
+  background: #a5d6a7;
+  border-color: #4caf50;
+}
+
+.options button.incorrect {
+  background: #ef9a9a;
+  border-color: #f44336;
 }
 
 #feedback {
@@ -208,56 +274,273 @@ button:hover {
   margin-top: 12px;
   min-height: 24px;
   color: var(--text-color);
+  font-size: 1.1rem;
 }
 
 #next-btn {
   margin-top: 16px;
-  padding: 10px;
-  font-size: 15px;
+  padding: 14px 16px;
+  font-size: 1rem;
+  font-weight: 600;
   border-radius: 8px;
   background: var(--button-bg);
   color: white;
   border: none;
   cursor: pointer;
   transition: background 0.3s, transform 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
 
 #next-btn:hover {
   background: var(--button-hover);
-  transform: scale(1.03);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+#next-btn:active {
+  transform: translateY(0);
 }
 
 .confirm-delete-box {
   display: none;
   background: var(--panel-bg);
   color: var(--text-color);
-  padding: 16px;
-  border-radius: 10px;
+  padding: 24px;
+  border-radius: 12px;
   text-align: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  width: 90%;
+  max-width: 400px;
 }
 
 .confirm-btn {
-  margin-top: 12px;
-  padding: 8px 18px;
-  border-radius: 6px;
+  margin: 10px 5px;
+  padding: 12px 20px;
+  border-radius: 8px;
   background-color: var(--accent-color);
   border: none;
   color: #fff;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 100px;
 }
 
 .confirm-btn:hover {
   background-color: #1976d2;
 }
 
-@media (max-width: 500px) {
+.confirm-btn.no-btn {
+  background-color: var(--error-color);
+}
+
+.confirm-btn.no-btn:hover {
+  background-color: #d32f2f;
+}
+
+.screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  width: auto;
+}
+
+.back-btn:hover {
+  color: #1976d2;
+  transform: none;
+  box-shadow: none;
+}
+
+.section {
+  margin: 20px 0;
+  padding: 15px;
+  background: var(--option-bg);
+  border-radius: 12px;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 20px 0;
+}
+
+.status-message {
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.status-message.success {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: var(--success-color);
+}
+
+.status-message.error {
+  background-color: rgba(244, 67, 54, 0.2);
+  color: var(--error-color);
+}
+
+.status-message.warning {
+  background-color: rgba(255, 152, 0, 0.2);
+  color: var(--warning-color);
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+  
   .container {
     padding: 20px;
+    border-radius: 12px;
   }
-  #quiz {
-    padding: 24px 16px;
+  
+  h2 {
+    font-size: 1.4rem;
+  }
+  
+  input, textarea {
+    padding: 12px 14px;
+  }
+  
+  button {
+    padding: 12px 14px;
+  }
+  
+  #question {
+    font-size: 1.15rem;
+  }
+  
+  .options button {
+    padding: 14px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 8px;
+  }
+  
+  .container {
+    padding: 16px;
+  }
+  
+  h2 {
+    font-size: 1.3rem;
+  }
+  
+  input, textarea {
+    padding: 10px 12px;
+  }
+  
+  button {
+    padding: 12px;
+    font-size: 0.95rem;
+  }
+  
+  #question {
+    font-size: 1.1rem;
+  }
+  
+  .options button {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+  
+  .confirm-delete-box {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .container {
+    padding: 12px;
+  }
+  
+  h2 {
+    font-size: 1.2rem;
+  }
+  
+  button {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  
+  #question {
+    font-size: 1rem;
+  }
+  
+  .options button {
+    padding: 10px 12px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container {
+    max-width: 600px;
+  }
+  
+  #question {
+    font-size: 1.3rem;
+  }
+  
+  .options button {
+    padding: 18px 22px;
+    font-size: 1.1rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .container {
+    max-width: 650px;
+  }
+  
+  h2 {
+    font-size: 1.6rem;
+  }
+  
+  #question {
+    font-size: 1.4rem;
+  }
+  
+  .options button {
+    padding: 20px 24px;
+    font-size: 1.15rem;
+  }
+}
+
+@media (max-height: 600px) {
+  body {
+    align-items: flex-start;
+    padding-top: 20px;
   }
 }
 
@@ -269,4 +552,54 @@ button:hover {
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.pulse {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideInTop {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideInBottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.3s ease forwards;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s ease forwards;
+}
+
+.slide-in-top {
+  animation: slideInTop 0.3s ease forwards;
+}
+
+.slide-in-bottom {
+  animation: slideInBottom 0.3s ease forwards;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
 }

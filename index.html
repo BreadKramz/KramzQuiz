@@ -15,9 +15,9 @@
 
   <div class="login-screen show" id="login-screen">
     <h2>🔐 Welcome to Kramz Quiz</h2>
-    <input type="text" id="login-username" placeholder="Enter username">
-    <input type="password" id="login-password" placeholder="Enter password">
-    <p id="login-message" style="text-align:center; margin:5px 0; color:red;"></p>
+    <input type="text" id="login-username" placeholder="Enter username" required>
+    <input type="password" id="login-password" placeholder="Enter password" required>
+    <p id="login-message" class="status-message error"></p>
     <button class="start-btn" onclick="userLogin()">Login</button>
     <button class="settings-btn" onclick="userRegister()">Register</button>
     <button class="admin-btn" onclick="showAdminLogin()">Admin Login</button>
@@ -25,58 +25,68 @@
 
   <div class="admin-login" id="admin-login">
     <h2>👨‍💼 Admin Login</h2>
-    <input type="text" id="admin-username" placeholder="Admin username">
-    <input type="password" id="admin-password" placeholder="Admin password">
-    <p id="admin-message" style="text-align:center; margin:5px 0; color:red;"></p>
+    <input type="text" id="admin-username" placeholder="Admin username" required>
+    <input type="password" id="admin-password" placeholder="Admin password" required>
+    <p id="admin-message" class="status-message error"></p>
     <button class="admin-btn" onclick="adminLogin()">Login</button>
     <button class="start-btn" onclick="backToLogin()">Back</button>
   </div>
 
   <div class="start-screen" id="start-screen">
     <h2>🎉 Welcome to the Kramz Quiz!</h2>
-    <p style="text-align: center; margin: 10px 0;">Almost finish, Few Bug Fixes Nalang</p>
+    <p class="status-message warning">Almost finish, Few Bug Fixes Nalang</p>
     <button class="start-btn" onclick="startQuiz()">▶ Start Quiz</button>
     <button class="settings-btn" onclick="toggleAddQuestion()">➕ Add Question</button>
     <button class="settings-btn" onclick="toggleSettings()">⚙️ Settings</button>
     <button class="settings-btn" onclick="openFeedbackPanel()">💬 Feedback</button>
     <button class="view-questions-btn" onclick="toggleViewPanel()">📋 View Questionnaires</button>
     <button class="settings-btn" onclick="logoutUser()">🚪 Logout</button>
-    <p id="quiz-error-message" style="color: red; text-align: center; margin-top: 10px;"></p>
+  
+  <div class="section">
+    <h3 class="section-title">🖼 Generate questions from an image</h3>
+    <input type="file" id="quiz-image" accept="image/*">
+    <button class="start-btn" onclick="generateQuestionsFromImage()">Generate from Image</button>
+    <p id="gen-status" class="status-message"></p>
+  </div>
+
+    <p id="quiz-error-message" class="status-message error"></p>
   </div>
 
   <div class="quiz-container" id="feedback-panel">
-    <h2>💬 Feedback / Suggestions</h2>
+    <div class="screen-header">
+      <h2>💬 Feedback / Suggestions</h2>
+      <button class="back-btn" onclick="backToStart()">⬅</button>
+    </div>
     <textarea id="feedback-text" placeholder="Write your suggestions here..." style="width:100%; height:100px; padding:8px; border-radius:6px; border:1px solid #ccc;"></textarea>
     <button class="start-btn" onclick="submitFeedback()">Submit Feedback</button>
     <button class="start-btn" onclick="backToStart()">Back</button>
-    <p id="feedback-message" style="text-align:center; margin-top:10px;"></p>
+    <p id="feedback-message" class="status-message"></p>
   </div>
 
   <div class="add-question-screen" id="add-question-screen">
-    <h2>Add Your Own Question</h2>
-    <input type="text" id="new-question" placeholder="Enter your question">
+    <div class="screen-header">
+      <h2>Add Your Own Question</h2>
+      <button class="back-btn" onclick="backToStart()">⬅</button>
+    </div>
+    <input type="text" id="new-question" placeholder="Enter your question" required>
     <div id="choices-container">
-      <input type="text" class="choice-input" placeholder="Choice 1">
-      <input type="text" class="choice-input" placeholder="Choice 2">
-      <input type="text" class="choice-input" placeholder="Choice 3">
-      <input type="text" class="choice-input" placeholder="Choice 4">
+      <input type="text" class="choice-input" placeholder="Choice 1" required>
+      <input type="text" class="choice-input" placeholder="Choice 2" required>
+      <input type="text" class="choice-input" placeholder="Choice 3" required>
+      <input type="text" class="choice-input" placeholder="Choice 4" required>
     </div>
     <label for="correct-answer">Correct Answer (1-4):</label>
-    <input type="number" id="correct-answer" min="1" max="4">
+    <input type="number" id="correct-answer" min="1" max="4" required>
     <button class="start-btn" onclick="addCustomQuestion()">Add Question</button>
     <button class="start-btn" onclick="backToStart()">Back</button>
-    <p id="add-feedback" style="text-align:center; margin-top: 10px;"></p>
-  </div>
-  
-  <div style="margin-top:10px; border-top:1px solid #666; padding-top:10px;">
-    <label style="font-weight:600; display:block; margin:6px 0;">🖼 Generate questions from an image</label>
-    <input type="file" id="quiz-image" accept="image/*">
-    <button class="start-btn" onclick="generateQuestionsFromImage()">Generate from Image</button>
-    <p id="gen-status" style="text-align:center; margin-top:8px;"></p>
+    <p id="add-feedback" class="status-message"></p>
   </div>
 
   <div class="settings-screen" id="settings-screen">
-    <h2>⚙️ Settings</h2>
+    <div class="screen-header">
+      <h2>⚙️ Settings</h2>
+      <button class="back-btn" onclick="backToStart()">⬅</button>
+    </div>
 
   <label class="toggle-option">
     Enable Background Music
@@ -110,7 +120,10 @@
   </div>
 
 <div id="admin-panel" class="admin-screen">
-  <h2>Admin Panel</h2>
+    <div class="screen-header">
+      <h2>Admin Panel</h2>
+      <button class="back-btn" onclick="backToLogin()">🚪</button>
+    </div>
   <button class="view-questions-btn" onclick="viewFeedbacks()">View Feedback</button>
   <button class="view-questions-btn" onclick="toggleGlobalQuestionPanel()">➕ Add Global Questions</button>
   <button class="view-questions-btn" onclick="viewGlobalQuestions()">📋 View Global Questions</button>
@@ -118,32 +131,44 @@
 </div>
 
   <div id="global-question-panel" class="add-question-screen">
-    <h2>Add Global Question</h2>
-    <input type="text" id="global-question-text" placeholder="Enter your question">
-    <input type="text" class="global-choice-input" placeholder="Choice 1">
-    <input type="text" class="global-choice-input" placeholder="Choice 2">
-    <input type="text" class="global-choice-input" placeholder="Choice 3">
-    <input type="text" class="global-choice-input" placeholder="Choice 4">
-    <input type="number" id="global-correct-answer" placeholder="Correct option (1-4)">
+    <div class="screen-header">
+      <h2>Add Global Question</h2>
+      <button class="back-btn" onclick="backToAdminPanel()">⬅</button>
+    </div>
+    <input type="text" id="global-question-text" placeholder="Enter your question" required>
+    <input type="text" class="global-choice-input" placeholder="Choice 1" required>
+    <input type="text" class="global-choice-input" placeholder="Choice 2" required>
+    <input type="text" class="global-choice-input" placeholder="Choice 3" required>
+    <input type="text" class="global-choice-input" placeholder="Choice 4" required>
+    <input type="number" id="global-correct-answer" placeholder="Correct option (1-4)" required>
     <div id="global-add-feedback" style="margin-top: 10px;"></div>
     <button onclick="addGlobalQuestion()">➕ Add Global Question</button>
     <button onclick="backToAdminPanel()">⬅ Back</button>
   </div>
 
   <div id="global-view-panel" class="quiz-container">
-    <h2>🌐 Global Questions</h2>
+    <div class="screen-header">
+      <h2>🌐 Global Questions</h2>
+      <button class="back-btn" onclick="backToAdminPanel()">⬅</button>
+    </div>
     <div id="global-view-list" style="max-height: 200px; overflow-y: auto;"></div>
     <button class="start-btn" onclick="backToAdminPanel()">Back</button>
-  </div> 
+  </div>
 
   <div class="quiz-container" id="feedback-view-panel">
-    <h2>📋 All Feedback</h2>
+    <div class="screen-header">
+      <h2>📋 All Feedback</h2>
+      <button class="back-btn" onclick="backToAdminPanel()">⬅</button>
+    </div>
     <div id="feedback-list" style="max-height:200px; overflow-y:auto;"></div>
     <button class="start-btn" onclick="backToAdminPanel()">Back</button>
   </div>
 
   <div id="view-panel" class="quiz-container">
-    <h2>Saved Questions</h2>
+    <div class="screen-header">
+      <h2>Saved Questions</h2>
+      <button class="back-btn" onclick="backToStart()">⬅</button>
+    </div>
     <div id="questions-list-container" style="max-height: 200px; overflow-y: auto;"></div>
     <button class="start-btn" onclick="backToStart()">Back</button>
   </div>
