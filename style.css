@@ -337,8 +337,18 @@ input[type="text"], input[type="password"], input[type="number"], textarea, inpu
   color: var(--text);
 }
 
+/* Registration panel specific styles */
+#register-screen .card-title {
+  text-align: center;
+}
+
 .eye-icon {
   font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.password-toggle:hover .eye-icon {
+  transform: scale(1.1);
 }
 input::placeholder, textarea::placeholder { color: color-mix(in srgb, var(--text-muted) 85%, transparent); }
 input:focus, textarea:focus {

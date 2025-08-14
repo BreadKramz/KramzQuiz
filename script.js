@@ -90,22 +90,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Settings toggles (bind safely)
-  safeOn("music-toggle", "change", function () {
-    const m = $("background-music");
-    if (!m) return;
-    if (this.checked) {
-      localStorage.setItem("music", "on");
-      m.play().catch(() => {});
-    } else {
-      localStorage.setItem("music", "off");
-      m.pause();
-    }
-  });
-
-  safeOn("theme-toggle-settings", "change", function () {
-    document.body.classList.toggle("dark", this.checked);
-    localStorage.setItem("theme", this.checked ? "dark" : "light");
-  });
+  // Already handled by separate event listeners below
+  // safeOn("music-toggle", "change", function () {
+  //   const m = $("background-music");
+  //   if (!m) return;
+  //   if (this.checked) {
+  //     localStorage.setItem("music", "on");
+  //     m.play().catch(() => {});
+  //   } else {
+  //     localStorage.setItem("music", "off");
+  //     m.pause();
+  //   }
+  //   });
+  // });
+  //
+  // safeOn("theme-toggle-settings", "change", function () {
+  //   document.body.classList.toggle("dark", this.checked);
+  //   localStorage.setItem("theme", this.checked ? "dark" : "light");
+  // });
 
   // ESC to close confirm overlays
   window.addEventListener("keydown", (e) => {
@@ -139,6 +141,56 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ================= Auth ====================
+// Show the registration panel
+window.showRegisterPanel = function () {
+  showOnly("register-screen");
+  // Clear any previous messages
+  hideFeedback("register-message");
+  // Clear input fields
+  $("register-username").value = "";
+  $("register-password").value = "";
+  $("register-confirm-password").value = "";
+};
+
+// Register a new user
+window.registerUser = async function () {
+  const username = $("register-username").value.trim();
+  const password = $("register-password").value.trim();
+  const confirmPassword = $("register-confirm-password").value.trim();
+  const msg = $("register-message");
+
+  if (!username || !password) {
+    showFeedback("register-message", "⚠ Please fill in all fields.", "error");
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    showFeedback("register-message", "⚠ Passwords do not match.", "error");
+    return;
+  }
+
+  try {
+    const userRef = doc(db, "users", username);
+    const existing = await getDoc(userRef);
+    if (existing.exists()) {
+      showFeedback("register-message", "⚠ Username already taken.", "error");
+      return;
+    }
+    await setDoc(userRef, { username, password });
+    showFeedback("register-message", "✅ Account created successfully! You can now login.", "success");
+    
+    // Optionally, after a short delay, redirect to login screen
+    setTimeout(() => {
+      showOnly("login-screen");
+      // Pre-fill the username in the login form
+      $("login-username").value = username;
+    }, 2000);
+  } catch (err) {
+    console.error(err);
+    showFeedback("register-message", "❌ Error creating account.", "error");
+  }
+};
+
 window.userRegister = async function () {
   const username = $("login-username").value.trim();
   const password = $("login-password").value.trim();
@@ -498,6 +550,34 @@ window.toggleSettings = function () {
   if (musicToggle) musicToggle.checked = localStorage.getItem("music") === "on";
 };
 
+// Fix for settings toggles
+document.addEventListener("DOMContentLoaded", function() {
+  // Ensure settings toggles work properly
+  const themeToggle = $("theme-toggle-settings");
+  const musicToggle = $("music-toggle");
+  
+  if (themeToggle) {
+    themeToggle.addEventListener("change", function () {
+      document.body.classList.toggle("dark", this.checked);
+      localStorage.setItem("theme", this.checked ? "dark" : "light");
+    });
+  }
+  
+  if (musicToggle) {
+    musicToggle.addEventListener("change", function () {
+      const m = $("background-music");
+      if (!m) return;
+      if (this.checked) {
+        localStorage.setItem("music", "on");
+        m.play().catch(() => {});
+      } else {
+        localStorage.setItem("music", "off");
+        m.pause();
+      }
+    });
+  }
+});
+
 // =============== Quiz Flow =================
 window.startQuiz = async function () {
   const errorMsg = $("quiz-error-message");
@@ -832,27 +912,6 @@ function addAriaAttributes() {
     .forEach(section => section.setAttribute('role', 'region'));
 }
 
-// ======= Password Toggle Functionality =======
-function initPasswordToggles() {
-  // Add event listeners to all password toggle buttons
-  document.querySelectorAll('.password-toggle').forEach(button => {
-    button.addEventListener('click', function() {
-      const input = this.previousElementSibling;
-      const eyeIcon = this.querySelector('.eye-icon');
-      
-      if (input.type === 'password') {
-        input.type = 'text';
-        eyeIcon.textContent = '🙈'; // Closed eye icon
-        this.setAttribute('aria-label', 'Hide password');
-      } else {
-        input.type = 'password';
-        eyeIcon.textContent = '👁'; // Open eye icon
-        this.setAttribute('aria-label', 'Show password');
-      }
-    });
-  });
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   // Force dark mode by default
   document.body.classList.add("dark");
@@ -910,3 +969,24 @@ document.addEventListener("DOMContentLoaded", () => {
     musicToggle.checked = true; // show toggle as "on"
   }
 });
+
+// ======= Password Toggle Functionality =======
+function initPasswordToggles() {
+  // Add event listeners to all password toggle buttons
+  document.querySelectorAll('.password-toggle').forEach(button => {
+    button.addEventListener('click', function() {
+      const input = this.previousElementSibling;
+      const eyeIcon = this.querySelector('.eye-icon');
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        eyeIcon.textContent = '🔒'; // Lock icon when visible
+        this.setAttribute('aria-label', 'Hide password');
+      } else {
+        input.type = 'password';
+        eyeIcon.textContent = '🔑'; // Key icon when hidden
+        this.setAttribute('aria-label', 'Show password');
+      }
+    });
+  });
+}
