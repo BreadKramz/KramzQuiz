@@ -1,7 +1,4 @@
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, getDocs, setDoc, getDoc, doc, query, where, orderBy, deleteDoc, Timestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -19,6 +16,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ================== State ==================
 let currentUser = null;
 let currentQuestionIndex = 0;
 let score = 0;
@@ -26,11 +24,94 @@ let timerInterval;
 let timeLeft = 10;
 let quizQuestions = [];
 let questionToDeleteId = null;
+let globalQuestionToDeleteId = null;
 
+// =============== Helpers ===================
+const $ = (id) => document.getElementById(id);
+const showOnly = (idToShow) => {
+  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
+  $(idToShow)?.classList.add("show");
+};
+const safeOn = (id, evt, fn) => {
+  const el = $(id);
+  if (el) el.addEventListener(evt, fn);
+};
+
+// ================= Init ====================
+// - Persist dark theme & music
+// - Safe event binding
+// - Close confirm overlays via ESC/outside click
+document.addEventListener("DOMContentLoaded", () => {
+  // Theme (default: light OFF => dark ON only if saved as dark)
+  const savedTheme = localStorage.getItem("theme"); // 'dark' | 'light'
+  document.body.classList.toggle("dark", savedTheme === "dark");
+
+  // Music restore
+  const music = $("background-music");
+  const musicPref = localStorage.getItem("music"); // 'on' | 'off'
+  if (music) {
+    if (musicPref === "on") {
+      music.volume = 1;
+      music.play().catch(() => {});
+    } else {
+      music.pause();
+    }
+  }
+
+  // Settings toggles (bind safely)
+  safeOn("music-toggle", "change", function () {
+    const m = $("background-music");
+    if (!m) return;
+    if (this.checked) {
+      localStorage.setItem("music", "on");
+      m.play().catch(() => {});
+    } else {
+      localStorage.setItem("music", "off");
+      m.pause();
+    }
+  });
+
+  safeOn("theme-toggle-settings", "change", function () {
+    document.body.classList.toggle("dark", this.checked);
+    localStorage.setItem("theme", this.checked ? "dark" : "light");
+  });
+
+  // ESC to close confirm overlays
+  window.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const personal = $("confirm-delete-box");
+    const global = $("confirmDeleteOverlay");
+    if (personal && personal.style.display === "flex") {
+      personal.style.display = "none"; questionToDeleteId = null;
+    }
+    if (global && global.style.display === "flex") {
+      global.style.display = "none"; globalQuestionToDeleteId = null;
+    }
+  });
+
+  // Click outside overlay to close
+  const personal = $("confirm-delete-box");
+  if (personal) {
+    personal.addEventListener("click", (e) => {
+      if (e.target === personal) { personal.style.display = "none"; questionToDeleteId = null; }
+    });
+  }
+  const global = $("confirmDeleteOverlay");
+  if (global) {
+    global.addEventListener("click", (e) => {
+      if (e.target === global) { global.style.display = "none"; globalQuestionToDeleteId = null; }
+    });
+  }
+
+  // ARIA helpers
+  addAriaAttributes();
+});
+
+// ================= Auth ====================
 window.userRegister = async function () {
-  const username = document.getElementById("login-username").value.trim();
-  const password = document.getElementById("login-password").value.trim();
-  const msg = document.getElementById("login-message");
+  const username = $("login-username").value.trim();
+  const password = $("login-password").value.trim();
+  const msg = $("login-message");
 
   if (!username || !password) {
     msg.className = "status-message error";
@@ -57,9 +138,9 @@ window.userRegister = async function () {
 };
 
 window.userLogin = async function () {
-  const username = document.getElementById("login-username").value.trim();
-  const password = document.getElementById("login-password").value.trim();
-  const msg = document.getElementById("login-message");
+  const username = $("login-username").value.trim();
+  const password = $("login-password").value.trim();
+  const msg = $("login-message");
 
   if (!username || !password) {
     msg.className = "status-message error";
@@ -76,13 +157,13 @@ window.userLogin = async function () {
     } else {
       currentUser = username;
       msg.innerText = "";
-      document.getElementById("login-screen").classList.remove("show");
-      document.getElementById("start-screen").classList.add("show");
+      showOnly("start-screen");
 
-      const music = document.getElementById("background-music");
-      if (music) {
+      // Play music only if user wants it
+      const music = $("background-music");
+      if (music && localStorage.getItem("music") === "on") {
         music.volume = 1;
-        music.play().catch(err => console.log("Music play error:", err));
+        music.play().catch(() => {});
       }
     }
   } catch (err) {
@@ -93,60 +174,37 @@ window.userLogin = async function () {
 };
 
 window.adminLogin = function () {
-  const username = document.getElementById("admin-username").value.trim();
-  const password = document.getElementById("admin-password").value.trim();
-  const msg = document.getElementById("admin-message");
+  const username = $("admin-username").value.trim();
+  const password = $("admin-password").value.trim();
+  const msg = $("admin-message");
 
   if (username === "admin" && password === "1234") {
-    document.getElementById("admin-login").classList.remove("show");
-    document.getElementById("admin-panel").classList.add("show");
+    showOnly("admin-panel");
   } else {
     msg.className = "status-message error";
     msg.innerText = "❌ Wrong admin credentials.";
   }
 };
 
-window.showAdminLogin = function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("admin-login").classList.add("show");
-};
+// =============== Navigation ===============
+window.showAdminLogin   = () => showOnly("admin-login");
+window.backToLogin      = () => showOnly("login-screen");
+window.backToStart      = () => showOnly("start-screen");
+window.backToAdminPanel = () => showOnly("admin-panel");
+window.returnToStart    = () => { showOnly("start-screen"); $("feedback").innerText = ""; };
 
-window.backToLogin = function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("login-screen").classList.add("show");
-};
-
-window.backToStart = function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("start-screen").classList.add("show");
-};
-
-window.backToAdminPanel = function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("admin-panel").classList.add("show");
-};
-
-window.returnToStart = function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("start-screen").classList.add("show");
-  document.getElementById("feedback").innerText = ""; // ✅ Clear feedback
-};
-
-window.openFeedbackPanel = function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("feedback-panel").classList.add("show");
-};
+// =============== Feedback =================
+window.openFeedbackPanel = () => showOnly("feedback-panel");
 
 window.submitFeedback = async function () {
-  const text = document.getElementById("feedback-text").value.trim();
-  const msg = document.getElementById("feedback-message");
+  const text = $("feedback-text").value.trim();
+  const msg  = $("feedback-message");
 
   if (!text) {
     msg.className = "status-message error";
     msg.innerText = "⚠ Please enter your feedback.";
     return;
   }
-
   try {
     await addDoc(collection(db, "feedback"), {
       message: text,
@@ -155,7 +213,7 @@ window.submitFeedback = async function () {
     });
     msg.className = "status-message success";
     msg.innerText = "✅ Feedback submitted!";
-    document.getElementById("feedback-text").value = "";
+    $("feedback-text").value = "";
   } catch (error) {
     console.error(error);
     msg.className = "status-message error";
@@ -164,10 +222,9 @@ window.submitFeedback = async function () {
 };
 
 window.viewFeedbacks = async function () {
-  const list = document.getElementById("feedback-list");
+  const list = $("feedback-list");
   list.innerHTML = "<p>Loading...</p>";
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("feedback-view-panel").classList.add("show");
+  showOnly("feedback-view-panel");
 
   try {
     const qSnap = await getDocs(query(collection(db, "feedback"), orderBy("date", "asc")));
@@ -185,11 +242,10 @@ window.viewFeedbacks = async function () {
     feedbacks.reverse().forEach(fb => {
       const date = fb.date?.toDate ? fb.date.toDate() : new Date();
       const formattedDate = date.toLocaleString();
-
       const div = document.createElement("div");
       div.innerHTML = `<strong>Feedback ${fb.num}</strong> (${fb.user || "Guest"})<br>
-                      ${fb.message}<br>
-                      <small>${formattedDate}</small>`;
+                       ${fb.message}<br>
+                       <small>${formattedDate}</small>`;
       div.style.marginBottom = "10px";
       list.appendChild(div);
     });
@@ -199,16 +255,14 @@ window.viewFeedbacks = async function () {
   }
 };
 
-window.toggleAddQuestion = function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("add-question-screen").classList.add("show");
-};
+// ========= Personal Questions =========
+window.toggleAddQuestion = () => showOnly("add-question-screen");
 
 window.addCustomQuestion = async function () {
-  const qText = document.getElementById("new-question").value.trim();
+  const qText   = $("new-question").value.trim();
   const choices = Array.from(document.querySelectorAll(".choice-input")).map(c => c.value.trim());
-  const correct = parseInt(document.getElementById("correct-answer").value) - 1;
-  const msg = document.getElementById("add-feedback");
+  const correct = parseInt($("correct-answer").value) - 1;
+  const msg     = $("add-feedback");
 
   if (!qText || choices.some(c => !c) || isNaN(correct) || correct < 0 || correct >= choices.length) {
     msg.className = "status-message error";
@@ -225,9 +279,9 @@ window.addCustomQuestion = async function () {
     });
     msg.className = "status-message success";
     msg.innerText = "✅ Question added!";
-    document.getElementById("new-question").value = "";
+    $("new-question").value = "";
     document.querySelectorAll(".choice-input").forEach(c => c.value = "");
-    document.getElementById("correct-answer").value = "";
+    $("correct-answer").value = "";
   } catch (err) {
     console.error(err);
     msg.className = "status-message error";
@@ -236,10 +290,8 @@ window.addCustomQuestion = async function () {
 };
 
 window.toggleViewPanel = async function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("view-panel").classList.add("show");
-
-  const container = document.getElementById("questions-list-container");
+  showOnly("view-panel");
+  const container = $("questions-list-container");
   container.innerHTML = "<p>Loading...</p>";
 
   try {
@@ -248,7 +300,6 @@ window.toggleViewPanel = async function () {
       container.innerHTML = "<p>No saved questions.</p>";
       return;
     }
-
     container.innerHTML = "";
     qSnap.forEach(docSnap => {
       const q = docSnap.data();
@@ -270,17 +321,18 @@ window.toggleViewPanel = async function () {
 
 window.deleteQuestion = function (id) {
   questionToDeleteId = id;
-  document.getElementById("confirm-delete-box").style.display = "block";
+  const overlay = $("confirm-delete-box");
+  if (overlay) overlay.style.display = "flex"; // flex -> centered panel
 };
 
 window.confirmDelete = async function () {
   if (!questionToDeleteId) return;
-
   try {
     await deleteDoc(doc(db, "questions", questionToDeleteId));
-    document.getElementById("confirm-delete-box").style.display = "none";
     questionToDeleteId = null;
-    toggleViewPanel(); 
+    const overlay = $("confirm-delete-box");
+    if (overlay) overlay.style.display = "none";
+    toggleViewPanel(); // refresh list
   } catch (err) {
     console.error(err);
   }
@@ -288,20 +340,21 @@ window.confirmDelete = async function () {
 
 window.cancelDelete = function () {
   questionToDeleteId = null;
-  document.getElementById("confirm-delete-box").style.display = "none";
+  const overlay = $("confirm-delete-box");
+  if (overlay) overlay.style.display = "none";
 };
 
+// ========= Global Questions (Admin) =========
 window.toggleGlobalQuestionPanel = async function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("global-question-panel").classList.add("show");
+  showOnly("global-question-panel");
   await loadGlobalQuestions();
 };
 
 window.addGlobalQuestion = async function () {
-  const question = document.getElementById("global-question-text").value.trim();
-  const choices = Array.from(document.querySelectorAll(".global-choice-input")).map(c => c.value.trim());
-  const correct = parseInt(document.getElementById("global-correct-answer").value) - 1;
-  const msg = document.getElementById("global-add-feedback");
+  const question = $("global-question-text").value.trim();
+  const choices  = Array.from(document.querySelectorAll(".global-choice-input")).map(c => c.value.trim());
+  const correct  = parseInt($("global-correct-answer").value) - 1;
+  const msg      = $("global-add-feedback");
 
   if (!question || choices.some(c => !c) || isNaN(correct) || correct < 0 || correct >= choices.length) {
     msg.className = "status-message error";
@@ -317,9 +370,10 @@ window.addGlobalQuestion = async function () {
     });
     msg.className = "status-message success";
     msg.innerText = "✅ Global question added!";
-    document.getElementById("global-question-text").value = "";
-    document.getElementById("global-correct-answer").value = "";
+    $("global-question-text").value = "";
+    $("global-correct-answer").value = "";
     document.querySelectorAll(".global-choice-input").forEach(c => c.value = "");
+    await loadGlobalQuestions();
   } catch (err) {
     console.error(err);
     msg.className = "status-message error";
@@ -328,7 +382,8 @@ window.addGlobalQuestion = async function () {
 };
 
 async function loadGlobalQuestions() {
-  const container = document.getElementById("global-questions-list");
+  const container = $("global-questions-list");
+  if (!container) return;
   container.innerHTML = "<p>Loading...</p>";
 
   try {
@@ -344,7 +399,8 @@ async function loadGlobalQuestions() {
       div.innerHTML = `<strong>${q.question}</strong><br>
         Choices: ${q.options.join(", ")}<br>
         Answer: ${q.options[q.answer]}<br>
-        <button class="debug-btn" onclick="deleteGlobalQuestion('${docSnap.id}')">🗑 Delete</button><hr style="margin:10px 0;">`;
+        <button class="debug-btn" onclick="deleteGlobalQuestion('${docSnap.id}')">🗑 Delete</button>
+        <hr style="margin:10px 0;">`;
       container.appendChild(div);
     });
   } catch (err) {
@@ -353,94 +409,9 @@ async function loadGlobalQuestions() {
   }
 }
 
-window.deleteGlobalQuestion = async function (id) {
-  try {
-    await deleteDoc(doc(db, "global_questions", id));
-    await viewGlobalQuestions();
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-window.toggleSettings = function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("settings-screen").classList.add("show");
-
-  const music = document.getElementById("background-music");
-  document.getElementById("music-toggle").checked = !music.paused;
-};
-
-document.getElementById("music-toggle").addEventListener("change", function () {
-  const music = document.getElementById("background-music");
-  if (this.checked) {
-    music.play().catch(err => console.warn("Music play error:", err));
-  } else {
-    music.pause();
-  }
-});
-
-window.startQuiz = async function () {
-  const errorMsg = document.getElementById("quiz-error-message");
-  errorMsg.innerText = "";
-
-  try {
-    const qSnap = await getDocs(query(collection(db, "questions"), where("user", "==", currentUser)));
-    const globalSnap = await getDocs(collection(db, "global_questions"));
-
-    let allQuestions = [];
-
-    qSnap.forEach(docSnap => {
-      const q = docSnap.data();
-      if (
-        q.question &&
-        Array.isArray(q.options) &&
-        typeof q.answer === "number" &&
-        q.options[q.answer] !== undefined
-      ) {
-        allQuestions.push(q);
-      }
-    });
-
-    globalSnap.forEach(docSnap => {
-      const q = docSnap.data();
-      if (
-        q.question &&
-        Array.isArray(q.options) &&
-        typeof q.answer === "number" &&
-        q.options[q.answer] !== undefined
-      ) {
-        allQuestions.push(q);
-      }
-    });
-
-    if (allQuestions.length === 0) {
-      errorMsg.className = "status-message error";
-      errorMsg.innerText = "❌ You don't have any questions yet. Please add some first.";
-      return;
-    }
-
-    allQuestions.sort(() => Math.random() - 0.5);
-
-    quizQuestions = allQuestions;
-    currentQuestionIndex = 0;
-    score = 0;
-
-    document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-    document.getElementById("quiz").classList.add("show");
-
-    loadQuestion();
-  } catch (err) {
-    console.error(err);
-    errorMsg.className = "status-message error";
-    errorMsg.innerText = "❌ Error loading questions.";
-  }
-};
-
 window.viewGlobalQuestions = async function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("global-view-panel").classList.add("show");
-
-  const container = document.getElementById("global-view-list");
+  showOnly("global-view-panel");
+  const container = $("global-view-list");
   container.innerHTML = "<p>Loading...</p>";
 
   try {
@@ -449,7 +420,6 @@ window.viewGlobalQuestions = async function () {
       container.innerHTML = "<p>No global questions available.</p>";
       return;
     }
-
     container.innerHTML = "";
     qSnap.forEach(docSnap => {
       const q = docSnap.data();
@@ -467,21 +437,31 @@ window.viewGlobalQuestions = async function () {
   }
 };
 
-let globalQuestionToDeleteId = null;
+window.deleteGlobalQuestion = async function (id) {
+  // Immediate delete (used in Global Question Panel list)
+  try {
+    await deleteDoc(doc(db, "global_questions", id));
+    await loadGlobalQuestions();
+  } catch (err) {
+    console.error(err);
+  }
+};
 
 window.prepareGlobalDelete = function (id) {
+  // Show confirm overlay (used in Global View Panel)
   globalQuestionToDeleteId = id;
-  document.getElementById("confirmDeleteOverlay").style.display = "block";
+  const overlay = $("confirmDeleteOverlay");
+  if (overlay) overlay.style.display = "flex";
 };
 
 window.confirmGlobalDelete = async function () {
   if (!globalQuestionToDeleteId) return;
-
   try {
     await deleteDoc(doc(db, "global_questions", globalQuestionToDeleteId));
     globalQuestionToDeleteId = null;
-    document.getElementById("confirmDeleteOverlay").style.display = "none";
-    await viewGlobalQuestions(); 
+    const overlay = $("confirmDeleteOverlay");
+    if (overlay) overlay.style.display = "none";
+    await viewGlobalQuestions();
   } catch (err) {
     console.error("Failed to delete global question:", err);
   }
@@ -489,29 +469,82 @@ window.confirmGlobalDelete = async function () {
 
 window.cancelGlobalDelete = function () {
   globalQuestionToDeleteId = null;
-  document.getElementById("confirmDeleteOverlay").style.display = "none";
+  const overlay = $("confirmDeleteOverlay");
+  if (overlay) overlay.style.display = "none";
+};
+
+// =============== Settings ==================
+// (Dark mode button lives here; removed the top button)
+window.toggleSettings = function () {
+  showOnly("settings-screen");
+  const themeToggle = $("theme-toggle-settings");
+  const musicToggle = $("music-toggle");
+  if (themeToggle) themeToggle.checked = document.body.classList.contains("dark");
+  if (musicToggle) musicToggle.checked = localStorage.getItem("music") === "on";
+};
+
+// =============== Quiz Flow =================
+window.startQuiz = async function () {
+  const errorMsg = $("quiz-error-message");
+  if (errorMsg) errorMsg.innerText = "";
+
+  try {
+    const qSnap      = await getDocs(query(collection(db, "questions"), where("user", "==", currentUser)));
+    const globalSnap = await getDocs(collection(db, "global_questions"));
+
+    let allQuestions = [];
+    qSnap.forEach(docSnap => {
+      const q = docSnap.data();
+      if (q.question && Array.isArray(q.options) && typeof q.answer === "number" && q.options[q.answer] !== undefined) {
+        allQuestions.push(q);
+      }
+    });
+    globalSnap.forEach(docSnap => {
+      const q = docSnap.data();
+      if (q.question && Array.isArray(q.options) && typeof q.answer === "number" && q.options[q.answer] !== undefined) {
+        allQuestions.push(q);
+      }
+    });
+
+    if (allQuestions.length === 0) {
+      if (errorMsg) {
+        errorMsg.className = "status-message error";
+        errorMsg.innerText = "❌ You don't have any questions yet. Please add some first.";
+      }
+      return;
+    }
+
+    allQuestions.sort(() => Math.random() - 0.5);
+    quizQuestions = allQuestions;
+    currentQuestionIndex = 0;
+    score = 0;
+
+    showOnly("quiz");
+    loadQuestion();
+  } catch (err) {
+    console.error(err);
+    if (errorMsg) {
+      errorMsg.className = "status-message error";
+      errorMsg.innerText = "❌ Error loading questions.";
+    }
+  }
 };
 
 function loadQuestion() {
   const original = quizQuestions[currentQuestionIndex];
+  if (!original) { endQuiz(); return; }
 
-  if (!original) {
-    endQuiz();
-    return;
-  }
+  $("question-counter").innerText = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
+  $("question").innerText = original.question;
+  $("feedback").innerText = "";
+  $("next-btn").style.display = "none";
 
-  document.getElementById("question-counter").innerText = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
-  document.getElementById("question").innerText = original.question;
-  document.getElementById("feedback").innerText = ""; 
-  document.getElementById("next-btn").style.display = "none"; 
-
-  const optionsContainer = document.getElementById("options-container");
+  const optionsContainer = $("options-container");
   optionsContainer.innerHTML = "";
 
-  const options = [...original.options];
-  const correctAnswerText = original.options[original.answer];
-  const shuffled = options
-    .map(opt => ({ text: opt, isCorrect: opt === correctAnswerText }))
+  const correctText = original.options[original.answer];
+  const shuffled = original.options
+    .map(opt => ({ text: opt, isCorrect: opt === correctText }))
     .sort(() => Math.random() - 0.5);
 
   quizQuestions[currentQuestionIndex].shuffled = shuffled;
@@ -533,19 +566,20 @@ function loadQuestion() {
 
 function startTimer() {
   timeLeft = 10;
-  document.getElementById("timer").innerText = `⌛Time: ${timeLeft}`;
-  document.getElementById("next-btn").style.display = "none"; 
+  $("timer").innerText = `⌛Time: ${timeLeft}`;
+  $("next-btn").style.display = "none";
 
   clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeLeft--;
-    document.getElementById("timer").innerText = `⌛Time: ${timeLeft}`;
+    $("timer").innerText = `⌛Time: ${timeLeft}`;
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
-      const correctIndex = quizQuestions[currentQuestionIndex].answer;
-      disableOptions(correctIndex);
-      document.getElementById("feedback").innerText = `⏰ Time's up! Correct: ${quizQuestions[currentQuestionIndex].options[correctIndex]}`;
-      document.getElementById("next-btn").style.display = "inline-block";
+      const q = quizQuestions[currentQuestionIndex];
+      const correctIndex = q.shuffled.findIndex(o => o.isCorrect);
+      disableOptions();
+      $("feedback").innerText = `⏰ Time's up! Correct: ${q.shuffled[correctIndex].text}`;
+      $("next-btn").style.display = "inline-block";
     }
   }, 1000);
 }
@@ -556,20 +590,18 @@ function selectAnswer(index) {
 
   if (selected.isCorrect) {
     score++;
-    document.getElementById("feedback").innerText = "✅ Correct!";
+    $("feedback").innerText = "✅ Correct!";
   } else {
-    const correct = q.shuffled.find(opt => opt.isCorrect);
-    document.getElementById("feedback").innerText = `❌ Wrong! Correct: ${correct.text}`;
+    const correctIndex = q.shuffled.findIndex(o => o.isCorrect);
+    $("feedback").innerText = `❌ Wrong! Correct: ${q.shuffled[correctIndex].text}`;
   }
-
-  document.getElementById("next-btn").style.display = "inline-block";
+  $("next-btn").style.display = "inline-block";
 }
 
 function disableOptions() {
-  const options = document.querySelectorAll(".option");
+  const opts = document.querySelectorAll(".option");
   const q = quizQuestions[currentQuestionIndex];
-
-  options.forEach((btn, i) => {
+  opts.forEach((btn, i) => {
     btn.disabled = true;
     if (q.shuffled[i].isCorrect) {
       btn.classList.add("correct");
@@ -584,103 +616,43 @@ window.nextQuestion = function () {
   if (currentQuestionIndex >= quizQuestions.length) {
     endQuiz();
   } else {
-    document.getElementById("feedback").innerText = "";
+    $("feedback").innerText = "";
     loadQuestion();
   }
 };
 
 function endQuiz() {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("score-screen").classList.add("show");
-  document.getElementById("score-text").innerText = `Your Score: ${score} / ${quizQuestions.length}`;
-  document.getElementById("score-message").innerText = score >= 1 ? "🎉 Okay Na!" : "💀 Pag study balik hoi!";
+  showOnly("score-screen");
+  $("score-text").innerText = `Your Score: ${score} / ${quizQuestions.length}`;
+  $("score-message").innerText = score >= 1 ? "🎉 Okay Na!" : "💀 Pag study balik hoi!";
 }
 
-window.returnToStart = function () {
-  document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("start-screen").classList.add("show");
-};
-
-document.getElementById('theme-toggle').addEventListener('change', function () {
-  document.body.classList.toggle('dark', this.checked);
-});
-
-// Add focus management for accessibility
-function focusFirstElement() {
-  const firstInput = document.querySelector('input, button');
-  if (firstInput) {
-    firstInput.focus();
-  }
-}
-
-// Add ARIA attributes for screen readers
-function addAriaAttributes() {
-  // Add ARIA labels to buttons
-  document.querySelectorAll('button').forEach(button => {
-    if (!button.getAttribute('aria-label') && button.textContent) {
-      button.setAttribute('aria-label', button.textContent.trim());
-    }
-  });
-
-  // Add ARIA live regions for status messages
-  document.querySelectorAll('.status-message').forEach(msg => {
-    msg.setAttribute('aria-live', 'polite');
-    msg.setAttribute('role', 'status');
-  });
-
-  // Add ARIA roles to main sections
-  document.querySelectorAll('.quiz-container, .start-screen, .settings-screen, .add-question-screen, .admin-login, .admin-screen').forEach(section => {
-    section.setAttribute('role', 'region');
-  });
-}
-
-// Initialize ARIA attributes when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  addAriaAttributes();
-});
-
-// Add keyboard navigation support
-document.addEventListener('keydown', function(e) {
-  // Add support for Escape key to close modals
-  if (e.key === 'Escape') {
-    const modals = document.querySelectorAll('.confirm-delete-box');
-    modals.forEach(modal => {
-      if (modal.style.display === 'block') {
-        modal.style.display = 'none';
-        // Reset the corresponding questionToDeleteId
-        if (modal.id === 'confirm-delete-box') {
-          questionToDeleteId = null;
-        } else if (modal.id === 'confirmDeleteOverlay') {
-          globalQuestionToDeleteId = null;
-        }
-      }
-    });
-  }
-});
-
+// =============== Logout ====================
 window.logoutUser = function () {
   currentUser = null;
 
-  if (!document.getElementById("music-toggle").checked) {
-    document.getElementById("background-music").pause();
-    document.getElementById("background-music").currentTime = 0;
+  // if user disabled music, stop playback
+  const musicToggle = $("music-toggle");
+  const music = $("background-music");
+  if (music && musicToggle && !musicToggle.checked) {
+    music.pause();
+    music.currentTime = 0;
   }
 
   document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  document.getElementById("login-screen").classList.add("show");
+  $("login-screen").classList.add("show");
 
-  document.getElementById("login-username").value = "";
-  document.getElementById("login-password").value = "";
-  document.getElementById("login-message").textContent = "";
-  document.getElementById("quiz-error-message").textContent = "";
+  $("login-username").value = "";
+  $("login-password").value = "";
+  $("login-message").textContent = "";
+  $("quiz-error-message").textContent = "";
 };
 
-// === AI: Image → Questions ===
-// === AI: Image → Questions ===
+// ======= AI: Image → Questions =======
 async function fileToDataURL(file) {
   return new Promise((res, rej) => {
     const reader = new FileReader();
-    reader.onload = () => res(reader.result); // full data URL keeps the correct MIME
+    reader.onload = () => res(reader.result);
     reader.onerror = rej;
     reader.readAsDataURL(file);
   });
@@ -699,18 +671,17 @@ async function fetchWithRetry(url, options, retries = 2, delayMs = 1500) {
 }
 
 window.generateQuestionsFromImage = async function () {
-  const status = document.getElementById("gen-status");
+  const status = $("gen-status");
   status.className = "status-message";
   status.innerText = "Analyzing image…";
 
-  const input = document.getElementById("quiz-image");
+  const input = $("quiz-image");
   if (!input.files || !input.files[0]) {
     status.className = "status-message error";
     status.innerText = "Please choose an image first.";
     return;
   }
 
-  // prevent double-click spam
   const btn = Array.from(document.querySelectorAll("button"))
     .find(b => b.textContent && b.textContent.toLowerCase().includes("generate from image"));
   if (btn) btn.disabled = true;
@@ -722,7 +693,7 @@ window.generateQuestionsFromImage = async function () {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        imageDataUrl: dataUrl,  // includes correct mime + base64
+        imageDataUrl: dataUrl,
         count: 4,
         difficulty: "easy"
       })
@@ -751,7 +722,6 @@ window.generateQuestionsFromImage = async function () {
       return;
     }
 
-    // Save to Firestore (your existing logic)
     for (const q of data.questions) {
       if (!q.question || !Array.isArray(q.options) || typeof q.correctIndex !== "number") continue;
       if (!q.options[q.correctIndex]) continue;
@@ -774,3 +744,42 @@ window.generateQuestionsFromImage = async function () {
     if (btn) btn.disabled = false;
   }
 };
+
+// ======= Accessibility helpers =======
+function addAriaAttributes() {
+  document.querySelectorAll('button').forEach(button => {
+    if (!button.getAttribute('aria-label') && button.textContent) {
+      button.setAttribute('aria-label', button.textContent.trim());
+    }
+  });
+  document.querySelectorAll('.status-message').forEach(msg => {
+    msg.setAttribute('aria-live', 'polite');
+    msg.setAttribute('role', 'status');
+  });
+  document.querySelectorAll('.quiz-container, .start-screen, .settings-screen, .add-question-screen, .admin-login, .admin-screen')
+    .forEach(section => section.setAttribute('role', 'region'));
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Force dark mode by default
+  document.body.classList.add("dark");
+
+  // If you have a checkbox toggle, set it to checked
+  const themeToggle = document.getElementById("theme-toggle");
+  if (themeToggle) {
+    themeToggle.checked = true;
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const music = document.getElementById("background-music");
+  if (music) {
+    music.volume = 1;
+    music.play().catch(err => console.warn("Music autoplay blocked:", err));
+  }
+
+  const musicToggle = document.getElementById("music-toggle");
+  if (musicToggle) {
+    musicToggle.checked = true; // show toggle as "on"
+  }
+});

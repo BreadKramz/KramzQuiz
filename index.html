@@ -1,190 +1,369 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Kramz Quiz</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KramzQuiz</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body class="dark">
+  <!-- Animated gradient background -->
+  <div class="bg-gradient"></div>
+  <div class="grain"></div>
 
-<audio id="background-music" loop>
-  <source src="Jeopardy Theme.mp3" type="audio/mpeg">
-</audio>
-
-<div class="container fade-panel">
-
-  <div class="login-screen show" id="login-screen">
-    <h2>🔐 Welcome to Kramz Quiz</h2>
-    <input type="text" id="login-username" placeholder="Enter username" required>
-    <input type="password" id="login-password" placeholder="Enter password" required>
-    <p id="login-message" class="status-message error"></p>
-    <button class="start-btn" onclick="userLogin()">Login</button>
-    <button class="settings-btn" onclick="userRegister()">Register</button>
-    <button class="admin-btn" onclick="showAdminLogin()">Admin Login</button>
-  </div>
-
-  <div class="admin-login" id="admin-login">
-    <h2>👨‍💼 Admin Login</h2>
-    <input type="text" id="admin-username" placeholder="Admin username" required>
-    <input type="password" id="admin-password" placeholder="Admin password" required>
-    <p id="admin-message" class="status-message error"></p>
-    <button class="admin-btn" onclick="adminLogin()">Login</button>
-    <button class="start-btn" onclick="backToLogin()">Back</button>
-  </div>
-
-  <div class="start-screen" id="start-screen">
-    <h2>🎉 Welcome to the Kramz Quiz!</h2>
-    <p class="status-message warning">Almost finish, Few Bug Fixes Nalang</p>
-    <button class="start-btn" onclick="startQuiz()">▶ Start Quiz</button>
-    <button class="settings-btn" onclick="toggleAddQuestion()">➕ Add Question</button>
-    <button class="settings-btn" onclick="toggleSettings()">⚙️ Settings</button>
-    <button class="settings-btn" onclick="openFeedbackPanel()">💬 Feedback</button>
-    <button class="view-questions-btn" onclick="toggleViewPanel()">📋 View Questionnaires</button>
-    <button class="settings-btn" onclick="logoutUser()">🚪 Logout</button>
-  
-  <div class="section">
-    <h3 class="section-title">🖼 Generate questions from an image</h3>
-    <input type="file" id="quiz-image" accept="image/*">
-    <button class="start-btn" onclick="generateQuestionsFromImage()">Generate from Image</button>
-    <p id="gen-status" class="status-message"></p>
-  </div>
-
-    <p id="quiz-error-message" class="status-message error"></p>
-  </div>
-
-  <div class="quiz-container" id="feedback-panel">
-    <div class="screen-header">
-      <h2>💬 Feedback / Suggestions</h2>
-      <button class="back-btn" onclick="backToStart()">⬅</button>
+  <!-- App Shell -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">🧠</div>
+      <h1 class="brand-title">KramzQuiz</h1>
     </div>
-    <textarea id="feedback-text" placeholder="Write your suggestions here..." style="width:100%; height:100px; padding:8px; border-radius:6px; border:1px solid #ccc;"></textarea>
-    <button class="start-btn" onclick="submitFeedback()">Submit Feedback</button>
-    <button class="start-btn" onclick="backToStart()">Back</button>
-    <p id="feedback-message" class="status-message"></p>
-  </div>
+  </header>
 
-  <div class="add-question-screen" id="add-question-screen">
-    <div class="screen-header">
-      <h2>Add Your Own Question</h2>
-      <button class="back-btn" onclick="backToStart()">⬅</button>
-    </div>
-    <input type="text" id="new-question" placeholder="Enter your question" required>
-    <div id="choices-container">
-      <input type="text" class="choice-input" placeholder="Choice 1" required>
-      <input type="text" class="choice-input" placeholder="Choice 2" required>
-      <input type="text" class="choice-input" placeholder="Choice 3" required>
-      <input type="text" class="choice-input" placeholder="Choice 4" required>
-    </div>
-    <label for="correct-answer">Correct Answer (1-4):</label>
-    <input type="number" id="correct-answer" min="1" max="4" required>
-    <button class="start-btn" onclick="addCustomQuestion()">Add Question</button>
-    <button class="start-btn" onclick="backToStart()">Back</button>
-    <p id="add-feedback" class="status-message"></p>
-  </div>
+  <main class="app-main">
+    <!-- Login Screen -->
+    <section class="container show" id="login-screen" role="region" aria-label="Login">
+      <div class="card">
+        <h2 class="card-title">Welcome back User</h2>
+        <p class="muted">Login or create an account to start your quiz.</p>
+        <div class="stack">
+          <label class="input">
+            <span class="input-label">Username</span>
+            <input id="login-username" type="text" placeholder="yourname" autocomplete="username" />
+          </label>
+          <label class="input">
+            <span class="input-label">Password</span>
+            <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" />
+          </label>
+          <p id="login-message" class="status-message" aria-live="polite"></p>
+          <button class="btn btn-primary" onclick="userLogin()">Sign in</button>
+          <button class="btn btn-ghost" onclick="userRegister()">Create account</button>
+        </div>
 
-  <div class="settings-screen" id="settings-screen">
-    <div class="screen-header">
-      <h2>⚙️ Settings</h2>
-      <button class="back-btn" onclick="backToStart()">⬅</button>
-    </div>
+        <div class="divider"></div>
 
-  <label class="toggle-option">
-    Enable Background Music
-    <input type="checkbox" id="music-toggle">
-    <span class="toggle-slider"></span>
-  </label>
+        <div class="inline">
+          <span class="muted">Are you an admin?</span>
+          <button class="btn btn-text" onclick="showAdminLogin()">Admin login</button>
+        </div>
+      </div>
+    </section>
 
-  <label class="toggle-option">
-    Enable Dark Mode
-    <input type="checkbox" id="theme-toggle" checked>
-    <span class="toggle-slider"></span>
-  </label>
+    <!-- Admin Login -->
+    <section class="container" id="admin-login" role="region" aria-label="Admin Login">
+      <div class="card">
+        <div class="screen-header">
+          <button class="back-btn" onclick="backToLogin()" aria-label="Back">←</button>
+          <h2 class="card-title">Admin login</h2>
+          <div></div>
+        </div>
+        <div class="stack">
+          <label class="input">
+            <span class="input-label">Admin username</span>
+            <input id="admin-username" type="text" placeholder="admin" />
+          </label>
+          <label class="input">
+            <span class="input-label">Admin password</span>
+            <input id="admin-password" type="password" placeholder="1234" />
+          </label>
+          <p id="admin-message" class="status-message" aria-live="polite"></p>
+          <button class="btn btn-primary" onclick="adminLogin()">Enter admin</button>
+        </div>
+      </div>
+    </section>
 
-    <br><br>
-    <button onclick="backToStart()">⬅ Back</button>
-  </div>
+    <!-- Start Screen -->
+    <section class="container" id="start-screen" role="region" aria-label="Start">
+      <div class="card">
+        <h2 class="card-title">Let’s play!</h2>
+        <p class="muted">Build questions, practice, and track your score.</p>
 
-  <div class="quiz-container" id="quiz">
-    <div id="question-counter">Question 1 of 4</div>
-    <div id="timer">Time: 10</div>
-    <h2 id="question">Question here...</h2>
-    <div class="options" id="options-container"></div>
-    <div id="feedback"></div>
-    <button id="next-btn" onclick="nextQuestion()">Next</button>
-  </div>
+        <div class="grid-actions">
+          <button class="btn btn-primary" onclick="startQuiz()">Start Quiz</button>
+          <button class="btn" onclick="toggleAddQuestion()">Add Question</button>
+          <button class="btn" onclick="toggleViewPanel()">View Questionnaires</button>
+          <button class="btn" onclick="toggleSettings()">Settings</button>
+          <button class="btn btn-ghost" onclick="openFeedbackPanel()">Feedback</button>
+        </div>
 
-  <div class="quiz-container" id="score-screen">
-    <h2 style="text-align:center;" id="score-text">Your Score:</h2>
-    <p style="text-align:center; margin: 15px 0; font-weight: bold;" id="score-message"></p>
-    <button class="start-btn" onclick="returnToStart()">Try Again</button>
-  </div>
+        <div class="section">
+          <div class="section-title">AI: Generate Questions from Image</div>
+          <div class="stack stack-tight">
+            <input id="quiz-image" type="file" accept="image/*" />
+            <div class="inline wrap">
+              <button class="btn" onclick="generateQuestionsFromImage()">Generate from image</button>
+              <p id="gen-status" class="status-message" aria-live="polite"></p>
+            </div>
+          </div>
+        </div>
 
-<div id="admin-panel" class="admin-screen">
-    <div class="screen-header">
-      <h2>Admin Panel</h2>
-      <button class="back-btn" onclick="backToLogin()">🚪</button>
-    </div>
-  <button class="view-questions-btn" onclick="viewFeedbacks()">View Feedback</button>
-  <button class="view-questions-btn" onclick="toggleGlobalQuestionPanel()">➕ Add Global Questions</button>
-  <button class="view-questions-btn" onclick="viewGlobalQuestions()">📋 View Global Questions</button>
-  <button class="start-btn" onclick="backToLogin()">Logout</button>
-</div>
+        <p id="quiz-error-message" class="status-message" aria-live="polite"></p>
 
-  <div id="global-question-panel" class="add-question-screen">
-    <div class="screen-header">
-      <h2>Add Global Question</h2>
-      <button class="back-btn" onclick="backToAdminPanel()">⬅</button>
-    </div>
-    <input type="text" id="global-question-text" placeholder="Enter your question" required>
-    <input type="text" class="global-choice-input" placeholder="Choice 1" required>
-    <input type="text" class="global-choice-input" placeholder="Choice 2" required>
-    <input type="text" class="global-choice-input" placeholder="Choice 3" required>
-    <input type="text" class="global-choice-input" placeholder="Choice 4" required>
-    <input type="number" id="global-correct-answer" placeholder="Correct option (1-4)" required>
-    <div id="global-add-feedback" style="margin-top: 10px;"></div>
-    <button onclick="addGlobalQuestion()">➕ Add Global Question</button>
-    <button onclick="backToAdminPanel()">⬅ Back</button>
-  </div>
+        <div class="divider"></div>
+        <button class="btn btn-danger subtle" onclick="logoutUser()">Logout</button>
+      </div>
+    </section>
 
-  <div id="global-view-panel" class="quiz-container">
-    <div class="screen-header">
-      <h2>🌐 Global Questions</h2>
-      <button class="back-btn" onclick="backToAdminPanel()">⬅</button>
-    </div>
-    <div id="global-view-list" style="max-height: 200px; overflow-y: auto;"></div>
-    <button class="start-btn" onclick="backToAdminPanel()">Back</button>
-  </div>
+    <!-- Settings -->
+    <section class="container" id="settings-screen" role="region" aria-label="Settings">
+      <div class="card">
+        <div class="screen-header">
+          <button class="back-btn" onclick="backToStart()" aria-label="Back">←</button>
+          <h2 class="card-title">Settings</h2>
+          <div></div>
+        </div>
 
-  <div class="quiz-container" id="feedback-view-panel">
-    <div class="screen-header">
-      <h2>📋 All Feedback</h2>
-      <button class="back-btn" onclick="backToAdminPanel()">⬅</button>
-    </div>
-    <div id="feedback-list" style="max-height:200px; overflow-y:auto;"></div>
-    <button class="start-btn" onclick="backToAdminPanel()">Back</button>
-  </div>
+        <div class="section">
+          <div class="section-title">Preferences</div>
 
-  <div id="view-panel" class="quiz-container">
-    <div class="screen-header">
-      <h2>Saved Questions</h2>
-      <button class="back-btn" onclick="backToStart()">⬅</button>
-    </div>
-    <div id="questions-list-container" style="max-height: 200px; overflow-y: auto;"></div>
-    <button class="start-btn" onclick="backToStart()">Back</button>
-  </div>
+          <div class="pref-row">
+            <div>
+              <div class="label-strong">Background music</div>
+              <div class="muted">Play ambient music during quiz.</div>
+            </div>
+            <label class="switch">
+              <input id="music-toggle" type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
 
-  <div id="confirm-delete-box" class="confirm-delete-box">
-    <p>Are you sure you want to delete this question?</p>
-    <button onclick="confirmDelete()" class="confirm-btn yes-btn">✅ Yes</button>
-    <button onclick="cancelDelete()" class="confirm-btn no-btn">❌ Cancel</button>
-  </div>
+          <div class="pref-row">
+            <div>
+              <div class="label-strong">Dark mode</div>
+              <div class="muted">Reduce eye strain with darker UI.</div>
+            </div>
+            <label class="switch">
+              <input id="theme-toggle-settings" type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
 
-<div id="confirmDeleteOverlay" class="confirm-delete-box" style="display:none;">
-  <p>Are you sure you want to delete this global question?</p>
-  <button class="confirm-btn" onclick="confirmGlobalDelete()">✅ Yes</button>
-  <button class="confirm-btn" onclick="cancelGlobalDelete()">❌ Cancel</button>
-</div>
+    <!-- Add Question -->
+    <section class="container" id="add-question-screen" role="region" aria-label="Add Question">
+      <div class="card">
+        <div class="screen-header">
+          <button class="back-btn" onclick="backToStart()" aria-label="Back">←</button>
+          <h2 class="card-title">Add a question</h2>
+          <div></div>
+        </div>
 
-<script type="module" src="script.js"></script>
+        <div class="stack">
+          <label class="input">
+            <span class="input-label">Question</span>
+            <textarea id="new-question" rows="3" placeholder="Type your question…"></textarea>
+          </label>
+
+          <div class="grid-choices">
+            <label class="input">
+              <span class="input-label">Choice 1</span>
+              <input class="choice-input" type="text" />
+            </label>
+            <label class="input">
+              <span class="input-label">Choice 2</span>
+              <input class="choice-input" type="text" />
+            </label>
+            <label class="input">
+              <span class="input-label">Choice 3</span>
+              <input class="choice-input" type="text" />
+            </label>
+            <label class="input">
+              <span class="input-label">Choice 4</span>
+              <input class="choice-input" type="text" />
+            </label>
+          </div>
+
+          <label class="input">
+            <span class="input-label">Correct answer (1–4)</span>
+            <input id="correct-answer" type="number" min="1" max="4" />
+          </label>
+
+          <p id="add-feedback" class="status-message" aria-live="polite"></p>
+          <button class="btn btn-primary" onclick="addCustomQuestion()">Add question</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- View Panel -->
+    <section class="container" id="view-panel" role="region" aria-label="My Questionnaires">
+      <div class="card">
+        <div class="screen-header">
+          <button class="back-btn" onclick="backToStart()" aria-label="Back">←</button>
+          <h2 class="card-title">My Questionnaires</h2>
+          <div></div>
+        </div>
+        <div id="questions-list-container" class="stack"></div>
+      </div>
+
+      <!-- Confirm delete (personal) -->
+      <div id="confirm-delete-box" class="confirm-delete-box" role="dialog" aria-modal="true" aria-label="Confirm deletion">
+        <div class="confirm-dialog">
+          <p>Delete this question?</p>
+          <div class="inline">
+            <button class="btn btn-primary" onclick="confirmDelete()">Yes</button>
+            <button class="btn btn-ghost" onclick="cancelDelete()">No</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Global View Panel (admin only) -->
+    <section class="container" id="global-view-panel" role="region" aria-label="Global Questionnaires">
+      <div class="card">
+        <div class="screen-header">
+          <button class="back-btn" onclick="backToAdminPanel()" aria-label="Back">←</button>
+          <h2 class="card-title">Global Questionnaires</h2>
+          <div></div>
+        </div>
+        <div id="global-view-list" class="stack"></div>
+      </div>
+
+      <!-- Confirm delete (global) -->
+      <div id="confirmDeleteOverlay" class="confirm-delete-box" role="dialog" aria-modal="true" aria-label="Confirm deletion">
+        <div class="confirm-dialog">
+          <p>Delete this global question?</p>
+          <div class="inline">
+            <button class="btn btn-primary" onclick="confirmGlobalDelete()">Yes</button>
+            <button class="btn btn-ghost" onclick="cancelGlobalDelete()">No</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Admin Panel -->
+    <section class="container" id="admin-panel" role="region" aria-label="Admin Panel">
+      <div class="card">
+        <div class="screen-header">
+          <button class="back-btn" onclick="backToLogin()" aria-label="Back">←</button>
+          <h2 class="card-title">Admin Panel</h2>
+          <div></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Add global question</div>
+          <div class="stack">
+            <label class="input">
+              <span class="input-label">Question</span>
+              <textarea id="global-question-text" rows="3" placeholder="Type a global question…"></textarea>
+            </label>
+
+            <div class="grid-choices">
+              <label class="input">
+                <span class="input-label">Choice 1</span>
+                <input class="global-choice-input" type="text" />
+              </label>
+              <label class="input">
+                <span class="input-label">Choice 2</span>
+                <input class="global-choice-input" type="text" />
+              </label>
+              <label class="input">
+                <span class="input-label">Choice 3</span>
+                <input class="global-choice-input" type="text" />
+              </label>
+              <label class="input">
+                <span class="input-label">Choice 4</span>
+                <input class="global-choice-input" type="text" />
+              </label>
+            </div>
+
+            <label class="input">
+              <span class="input-label">Correct answer (1–4)</span>
+              <input id="global-correct-answer" type="number" min="1" max="4" />
+            </label>
+
+            <p id="global-add-feedback" class="status-message" aria-live="polite"></p>
+            <div class="inline wrap">
+              <button class="btn btn-primary" onclick="addGlobalQuestion()">Add global</button>
+              <button class="btn" onclick="toggleGlobalQuestionPanel()">View all</button>
+              <button class="btn" onclick="viewGlobalQuestions()">View Global Questions</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Global Questions List -->
+    <section class="container" id="global-question-panel" role="region" aria-label="All Global Questions">
+      <div class="card">
+        <div class="screen-header">
+          <button class="back-btn" onclick="backToAdminPanel()" aria-label="Back">←</button>
+          <h2 class="card-title">All Global Questions</h2>
+          <div></div>
+        </div>
+        <div id="global-questions-list" class="stack"></div>
+      </div>
+    </section>
+
+    <!-- Feedback -->
+    <section class="container" id="feedback-panel" role="region" aria-label="Feedback">
+      <div class="card">
+        <div class="screen-header">
+          <button class="back-btn" onclick="returnToStart()" aria-label="Back">←</button>
+          <h2 class="card-title">Send feedback</h2>
+          <div></div>
+        </div>
+
+        <label class="input">
+          <span class="input-label">Your message</span>
+          <textarea id="feedback-text" rows="4" placeholder="Tell us what to improve…"></textarea>
+        </label>
+        <p id="feedback-message" class="status-message" aria-live="polite"></p>
+        <button class="btn btn-primary" onclick="submitFeedback()">Submit</button>
+      </div>
+    </section>
+
+    <!-- Feedback View -->
+    <section class="container" id="feedback-view-panel" role="region" aria-label="All Feedback">
+      <div class="card">
+        <div class="screen-header">
+          <button class="back-btn" onclick="backToStart()" aria-label="Back">←</button>
+          <h2 class="card-title">All Feedback</h2>
+          <div></div>
+        </div>
+        <div id="feedback-list" class="stack"></div>
+      </div>
+    </section>
+
+    <!-- Quiz -->
+    <section class="container" id="quiz" role="region" aria-label="Quiz">
+      <div class="card">
+        <div class="quiz-meta">
+          <div id="question-counter" class="meta-chip">Question 1 of 1</div>
+          <div id="timer" class="meta-chip">⌛ Time: 10</div>
+        </div>
+        <h2 id="question" class="question">Question text</h2>
+        <div id="options-container" class="options"></div>
+        <p id="feedback" class="status-message" aria-live="polite"></p>
+        <button id="next-btn" class="btn btn-primary" onclick="nextQuestion()">Next</button>
+        <button class="btn btn-ghost" onclick="returnToStart()">Return to start</button>
+      </div>
+    </section>
+
+    <!-- Score Screen -->
+    <section class="container" id="score-screen" role="region" aria-label="Score">
+      <div class="card">
+        <h2 id="score-text" class="card-title">Your Score: 0/0</h2>
+        <p id="score-message" class="muted">Message</p>
+        <div class="inline wrap">
+          <button class="btn btn-primary" onclick="returnToStart()">Back to Start</button>
+          <button class="btn" onclick="startQuiz()">Play Again</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <audio id="background-music" loop preload="none">
+    <source src="Jeopardy Theme.mp3" />
+  </audio>
+
+  <footer class="app-footer">
+    <div class="muted small">© <span id="year"></span> KramzQuiz • Built by Mark Real</div>
+  </footer>
+
+  <script type="module" src="script.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
