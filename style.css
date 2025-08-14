@@ -342,13 +342,14 @@ input[type="text"], input[type="password"], input[type="number"], textarea, inpu
   text-align: center;
 }
 
-.eye-icon {
-  font-size: 16px;
-  transition: transform 0.2s ease;
+.toggle-text {
+  font-size: 14px;
+  font-weight: 600;
+  transition: color 0.2s ease;
 }
 
-.password-toggle:hover .eye-icon {
-  transform: scale(1.1);
+.password-toggle:hover .toggle-text {
+  color: var(--primary);
 }
 input::placeholder, textarea::placeholder { color: color-mix(in srgb, var(--text-muted) 85%, transparent); }
 input:focus, textarea:focus {

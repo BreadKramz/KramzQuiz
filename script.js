@@ -976,15 +976,15 @@ function initPasswordToggles() {
   document.querySelectorAll('.password-toggle').forEach(button => {
     button.addEventListener('click', function() {
       const input = this.previousElementSibling;
-      const eyeIcon = this.querySelector('.eye-icon');
+      const toggleText = this.querySelector('.toggle-text');
       
       if (input.type === 'password') {
         input.type = 'text';
-        eyeIcon.textContent = '🔒'; // Lock icon when visible
+        toggleText.textContent = 'Hide';
         this.setAttribute('aria-label', 'Hide password');
       } else {
         input.type = 'password';
-        eyeIcon.textContent = '🔑'; // Key icon when hidden
+        toggleText.textContent = 'Show';
         this.setAttribute('aria-label', 'Show password');
       }
     });
