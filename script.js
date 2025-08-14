@@ -30,7 +30,35 @@ let globalQuestionToDeleteId = null;
 const $ = (id) => document.getElementById(id);
 const showOnly = (idToShow) => {
   document.querySelectorAll(".show").forEach(el => el.classList.remove("show"));
-  $(idToShow)?.classList.add("show");
+  const elementToShow = $(idToShow);
+  if (elementToShow) {
+    elementToShow.classList.add("show");
+    // Trigger reflow to restart animation
+    elementToShow.style.animation = 'none';
+    setTimeout(() => {
+      elementToShow.style.animation = '';
+    }, 10);
+  }
+};
+
+// Function to show feedback messages with animation
+const showFeedback = (elementId, message, type = '') => {
+  const element = $(elementId);
+  if (element) {
+    element.textContent = message;
+    element.className = `status-message ${type} show`;
+  }
+};
+
+// Function to hide feedback messages with animation
+const hideFeedback = (elementId) => {
+  const element = $(elementId);
+  if (element) {
+    element.classList.remove('show');
+    setTimeout(() => {
+      element.textContent = '';
+    }, 300);
+  }
 };
 const safeOn = (id, evt, fn) => {
   const el = $(id);
@@ -114,8 +142,7 @@ window.userRegister = async function () {
   const msg = $("login-message");
 
   if (!username || !password) {
-    msg.className = "status-message error";
-    msg.innerText = "⚠ Please fill in both fields.";
+    showFeedback("login-message", "⚠ Please fill in both fields.", "error");
     return;
   }
 
@@ -123,17 +150,14 @@ window.userRegister = async function () {
     const userRef = doc(db, "users", username);
     const existing = await getDoc(userRef);
     if (existing.exists()) {
-      msg.className = "status-message error";
-      msg.innerText = "⚠ Username already taken.";
+      showFeedback("login-message", "⚠ Username already taken.", "error");
       return;
     }
     await setDoc(userRef, { username, password });
-    msg.className = "status-message success";
-    msg.innerText = "✅ Registered! You can now login.";
+    showFeedback("login-message", "✅ Registered! You can now login.", "success");
   } catch (err) {
     console.error(err);
-    msg.className = "status-message error";
-    msg.innerText = "❌ Error registering.";
+    showFeedback("login-message", "❌ Error registering.", "error");
   }
 };
 
@@ -143,8 +167,7 @@ window.userLogin = async function () {
   const msg = $("login-message");
 
   if (!username || !password) {
-    msg.className = "status-message error";
-    msg.innerText = "⚠ Please fill in both fields.";
+    showFeedback("login-message", "⚠ Please fill in both fields.", "error");
     return;
   }
 
@@ -152,11 +175,10 @@ window.userLogin = async function () {
     const docRef = doc(db, "users", username);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists() || docSnap.data().password !== password) {
-      msg.className = "status-message error";
-      msg.innerText = "❌ Invalid login.";
+      showFeedback("login-message", "❌ Invalid login.", "error");
     } else {
       currentUser = username;
-      msg.innerText = "";
+      hideFeedback("login-message");
       showOnly("start-screen");
 
       // Play music only if user wants it
@@ -168,8 +190,7 @@ window.userLogin = async function () {
     }
   } catch (err) {
     console.error(err);
-    msg.className = "status-message error";
-    msg.innerText = "❌ Error logging in.";
+    showFeedback("login-message", "❌ Error logging in.", "error");
   }
 };
 
@@ -179,10 +200,10 @@ window.adminLogin = function () {
   const msg = $("admin-message");
 
   if (username === "admin" && password === "1234") {
+    hideFeedback("admin-message");
     showOnly("admin-panel");
   } else {
-    msg.className = "status-message error";
-    msg.innerText = "❌ Wrong admin credentials.";
+    showFeedback("admin-message", "❌ Wrong admin credentials.", "error");
   }
 };
 
@@ -201,8 +222,7 @@ window.submitFeedback = async function () {
   const msg  = $("feedback-message");
 
   if (!text) {
-    msg.className = "status-message error";
-    msg.innerText = "⚠ Please enter your feedback.";
+    showFeedback("feedback-message", "⚠ Please enter your feedback.", "error");
     return;
   }
   try {
@@ -211,13 +231,11 @@ window.submitFeedback = async function () {
       user: currentUser || "Guest",
       date: Timestamp.now()
     });
-    msg.className = "status-message success";
-    msg.innerText = "✅ Feedback submitted!";
+    showFeedback("feedback-message", "✅ Feedback submitted!", "success");
     $("feedback-text").value = "";
   } catch (error) {
     console.error(error);
-    msg.className = "status-message error";
-    msg.innerText = "❌ Error sending feedback.";
+    showFeedback("feedback-message", "❌ Error sending feedback.", "error");
   }
 };
 
@@ -265,8 +283,7 @@ window.addCustomQuestion = async function () {
   const msg     = $("add-feedback");
 
   if (!qText || choices.some(c => !c) || isNaN(correct) || correct < 0 || correct >= choices.length) {
-    msg.className = "status-message error";
-    msg.innerText = "⚠ Please fill all fields.";
+    showFeedback("add-feedback", "⚠ Please fill all fields.", "error");
     return;
   }
 
@@ -277,15 +294,13 @@ window.addCustomQuestion = async function () {
       options: choices,
       answer: correct
     });
-    msg.className = "status-message success";
-    msg.innerText = "✅ Question added!";
+    showFeedback("add-feedback", "✅ Question added!", "success");
     $("new-question").value = "";
     document.querySelectorAll(".choice-input").forEach(c => c.value = "");
     $("correct-answer").value = "";
   } catch (err) {
     console.error(err);
-    msg.className = "status-message error";
-    msg.innerText = "❌ Error adding question.";
+    showFeedback("add-feedback", "❌ Error adding question.", "error");
   }
 };
 
@@ -357,8 +372,7 @@ window.addGlobalQuestion = async function () {
   const msg      = $("global-add-feedback");
 
   if (!question || choices.some(c => !c) || isNaN(correct) || correct < 0 || correct >= choices.length) {
-    msg.className = "status-message error";
-    msg.innerText = "⚠ Please fill all fields.";
+    showFeedback("global-add-feedback", "⚠ Please fill all fields.", "error");
     return;
   }
 
@@ -368,16 +382,14 @@ window.addGlobalQuestion = async function () {
       options: choices,
       answer: correct
     });
-    msg.className = "status-message success";
-    msg.innerText = "✅ Global question added!";
+    showFeedback("global-add-feedback", "✅ Global question added!", "success");
     $("global-question-text").value = "";
     $("global-correct-answer").value = "";
     document.querySelectorAll(".global-choice-input").forEach(c => c.value = "");
     await loadGlobalQuestions();
   } catch (err) {
     console.error(err);
-    msg.className = "status-message error";
-    msg.innerText = "❌ Error adding global question.";
+    showFeedback("global-add-feedback", "❌ Error adding global question.", "error");
   }
 };
 
@@ -486,9 +498,18 @@ window.toggleSettings = function () {
 // =============== Quiz Flow =================
 window.startQuiz = async function () {
   const errorMsg = $("quiz-error-message");
-  if (errorMsg) errorMsg.innerText = "";
+  if (errorMsg) {
+    errorMsg.textContent = "";
+    errorMsg.className = "status-message";
+  }
 
   try {
+    // Show loading message
+    if (errorMsg) {
+      errorMsg.className = "status-message";
+      errorMsg.innerHTML = '<span class="loading"></span> Loading questions...';
+    }
+
     const qSnap      = await getDocs(query(collection(db, "questions"), where("user", "==", currentUser)));
     const globalSnap = await getDocs(collection(db, "global_questions"));
 
@@ -508,8 +529,7 @@ window.startQuiz = async function () {
 
     if (allQuestions.length === 0) {
       if (errorMsg) {
-        errorMsg.className = "status-message error";
-        errorMsg.innerText = "❌ You don't have any questions yet. Please add some first.";
+        showFeedback("quiz-error-message", "❌ You don't have any questions yet. Please add some first.", "error");
       }
       return;
     }
@@ -524,8 +544,7 @@ window.startQuiz = async function () {
   } catch (err) {
     console.error(err);
     if (errorMsg) {
-      errorMsg.className = "status-message error";
-      errorMsg.innerText = "❌ Error loading questions.";
+      showFeedback("quiz-error-message", "❌ Error loading questions.", "error");
     }
   }
 };
@@ -541,6 +560,7 @@ function loadQuestion() {
 
   const optionsContainer = $("options-container");
   optionsContainer.innerHTML = "";
+  optionsContainer.style.opacity = "0";
 
   const correctText = original.options[original.answer];
   const shuffled = original.options
@@ -561,24 +581,46 @@ function loadQuestion() {
     optionsContainer.appendChild(btn);
   });
 
+  // Add fade-in effect to options
+  setTimeout(() => {
+    optionsContainer.style.opacity = "1";
+    optionsContainer.style.transition = "opacity 0.3s ease";
+  }, 50);
+
   startTimer();
 }
 
 function startTimer() {
   timeLeft = 10;
-  $("timer").innerText = `⌛Time: ${timeLeft}`;
+  const timerElement = $("timer");
+  timerElement.innerText = `⌛Time: ${timeLeft}`;
+  timerElement.classList.remove("warning");
   $("next-btn").style.display = "none";
 
   clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeLeft--;
-    $("timer").innerText = `⌛Time: ${timeLeft}`;
+    timerElement.innerText = `⌛Time: ${timeLeft}`;
+    
+    // Add warning animation when time is low
+    if (timeLeft <= 3) {
+      timerElement.classList.add("warning");
+    }
+    
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
       const q = quizQuestions[currentQuestionIndex];
       const correctIndex = q.shuffled.findIndex(o => o.isCorrect);
       disableOptions();
       $("feedback").innerText = `⏰ Time's up! Correct: ${q.shuffled[correctIndex].text}`;
+      
+      // Add animation class to feedback
+      const feedback = $("feedback");
+      feedback.classList.remove("show");
+      setTimeout(() => {
+        feedback.classList.add("show");
+      }, 10);
+      
       $("next-btn").style.display = "inline-block";
     }
   }, 1000);
@@ -595,6 +637,14 @@ function selectAnswer(index) {
     const correctIndex = q.shuffled.findIndex(o => o.isCorrect);
     $("feedback").innerText = `❌ Wrong! Correct: ${q.shuffled[correctIndex].text}`;
   }
+  
+  // Add animation class to feedback
+  const feedback = $("feedback");
+  feedback.classList.remove("show");
+  setTimeout(() => {
+    feedback.classList.add("show");
+  }, 10);
+  
   $("next-btn").style.display = "inline-block";
 }
 
@@ -612,12 +662,31 @@ function disableOptions() {
 }
 
 window.nextQuestion = function () {
-  currentQuestionIndex++;
-  if (currentQuestionIndex >= quizQuestions.length) {
-    endQuiz();
+  // Add fade out effect to current question
+  const quizContainer = document.getElementById("quiz");
+  if (quizContainer) {
+    quizContainer.style.opacity = "0";
+    quizContainer.style.transform = "translateY(-10px)";
+    setTimeout(() => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex >= quizQuestions.length) {
+        endQuiz();
+      } else {
+        $("feedback").innerText = "";
+        loadQuestion();
+        // Reset opacity for next question
+        quizContainer.style.opacity = "1";
+        quizContainer.style.transform = "translateY(0)";
+      }
+    }, 300);
   } else {
-    $("feedback").innerText = "";
-    loadQuestion();
+    currentQuestionIndex++;
+    if (currentQuestionIndex >= quizQuestions.length) {
+      endQuiz();
+    } else {
+      $("feedback").innerText = "";
+      loadQuestion();
+    }
   }
 };
 
@@ -625,6 +694,12 @@ function endQuiz() {
   showOnly("score-screen");
   $("score-text").innerText = `Your Score: ${score} / ${quizQuestions.length}`;
   $("score-message").innerText = score >= 1 ? "🎉 Okay Na!" : "💀 Pag study balik hoi!";
+  
+  // Add celebration effect for perfect score
+  if (score === quizQuestions.length && quizQuestions.length > 0) {
+    const scoreScreen = document.getElementById("score-screen");
+    scoreScreen.style.animation = "celebration 1s ease";
+  }
 }
 
 // =============== Logout ====================
@@ -672,13 +747,11 @@ async function fetchWithRetry(url, options, retries = 2, delayMs = 1500) {
 
 window.generateQuestionsFromImage = async function () {
   const status = $("gen-status");
-  status.className = "status-message";
-  status.innerText = "Analyzing image…";
+  showFeedback("gen-status", "Analyzing image…");
 
   const input = $("quiz-image");
   if (!input.files || !input.files[0]) {
-    status.className = "status-message error";
-    status.innerText = "Please choose an image first.";
+    showFeedback("gen-status", "Please choose an image first.", "error");
     return;
   }
 
@@ -702,23 +775,21 @@ window.generateQuestionsFromImage = async function () {
     if (!resp.ok) {
       const errorText = await resp.text();
       console.error(`API Error (${resp.status})`, errorText);
-      status.className = "status-message error";
       if (resp.status === 404) {
-        status.innerText = "❌ API route not found (404). Ensure api/generate-questions.js exists and is deployed.";
+        showFeedback("gen-status", "❌ API route not found (404). Ensure api/generate-questions.js exists and is deployed.", "error");
       } else if (resp.status === 429) {
-        status.innerText = "❌ Rate limited (429). Please wait a moment and try again.";
+        showFeedback("gen-status", "❌ Rate limited (429). Please wait a moment and try again.", "error");
       } else if (resp.status === 500) {
-        status.innerText = `❌ Server error: ${errorText}`;
+        showFeedback("gen-status", `❌ Server error: ${errorText}`, "error");
       } else {
-        status.innerText = `❌ Error ${resp.status}: ${errorText}`;
+        showFeedback("gen-status", `❌ Error ${resp.status}: ${errorText}`, "error");
       }
       return;
     }
 
     const data = await resp.json();
     if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
-      status.className = "status-message error";
-      status.innerText = "No questions generated.";
+      showFeedback("gen-status", "No questions generated.", "error");
       return;
     }
 
@@ -734,12 +805,10 @@ window.generateQuestionsFromImage = async function () {
       });
     }
 
-    status.className = "status-message success";
-    status.innerText = `✅ Added ${data.questions.length} generated question(s)! Check "View Questionnaires" or start the quiz.`;
+    showFeedback("gen-status", `✅ Added ${data.questions.length} generated question(s)! Check "View Questionnaires" or start the quiz.`, "success");
   } catch (e) {
     console.error(e);
-    status.className = "status-message error";
-    status.innerText = `Generation failed: ${e.message}`;
+    showFeedback("gen-status", `Generation failed: ${e.message}`, "error");
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -769,7 +838,41 @@ document.addEventListener("DOMContentLoaded", () => {
   if (themeToggle) {
     themeToggle.checked = true;
   }
+  
+  // Create particles
+  createParticles();
 });
+
+// Function to create animated particles
+function createParticles() {
+  const particlesContainer = document.querySelector('.particles');
+  if (!particlesContainer) return;
+  
+  // Create 30 particles
+  for (let i = 0; i < 30; i++) {
+    const particle = document.createElement('div');
+    particle.classList.add('particle');
+    
+    // Random size between 2px and 6px
+    const size = Math.random() * 4 + 2;
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    
+    // Random position
+    particle.style.left = `${Math.random() * 100}%`;
+    particle.style.top = `${Math.random() * 100}%`;
+    
+    // Random animation duration between 10s and 30s
+    const duration = Math.random() * 20 + 10;
+    particle.style.animationDuration = `${duration}s`;
+    
+    // Random animation delay
+    const delay = Math.random() * 5;
+    particle.style.animationDelay = `${delay}s`;
+    
+    particlesContainer.appendChild(particle);
+  }
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   const music = document.getElementById("background-music");
